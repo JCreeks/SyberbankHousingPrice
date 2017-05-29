@@ -46,7 +46,7 @@ library(DT)
 
 ```{r}
 
-dtrain <- fread('../input/train.csv', stringsAsFactors=TRUE)
+dtrain <- fread('/input/train.csv', stringsAsFactors=TRUE)
 
 ```
 

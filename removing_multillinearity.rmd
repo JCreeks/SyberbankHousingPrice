@@ -1,0 +1,172 @@
+---
+title: "Multicollinearity and information gain"
+author: "Roberto Ruiz"
+date: "April 29, 2017"
+output: html_document
+---
+
+
+<H5> In this case we do have a very large ammount of independent variables. As SRK mentioned in [his notebook](https://www.kaggle.com/sudalairajkumar/sberbank-russian-housing-market/feature-engineering-validation-strategy), adding irrelevant variables will degrade the performance of the models. Or for example, as mentioned by Andy Harless in [his post](https://www.kaggle.com/c/sberbank-russian-housing-market/discussion/32328), we need to be careful with the Macro data. That is because many variables are high intercorrelated, and these do not produce information. Even worse, they tent to inflate the variance.</H5>
+&nbsp;
+
+<H5> There are several ways to avoid this multicollinearty. For example in Ecology it is very common to calculate a correlation matrix between all the independent variables and remove one of them, when the correlation is bigger than 0.7. </H5>
+&nbsp;
+
+<H5> My favourite way is to calculate the "variance inflation factor" (VIF) for each variable. VIF calculations are straightforward and easily comprehensible: the higher the value, the higher the collinearity. A VIF is calculated for each explanatory variable and those with high values are removed. The definition of ‘high’ is somewhat arbitrary but values in the range of 5-10 are commonly used. It takes the following formule:</H5>
+&nbsp;
+&nbsp;
+
+$VIF = \frac{1}{1-R^2}$
+
+&nbsp;
+&nbsp;
+
+<H5> I have copied an excellent function from [this site](https://beckmw.wordpress.com/2013/02/05/collinearity-and-stepwise-vif-selection/). This function calculates the VIFs for all the independent variables, and if they have values bigger than the choosed limit, the function removes the biggest value and calculate again. It repeates this operation until all the variables have the accepted VIF. </H5>
+
+&nbsp;
+&nbsp;
+
+
+```{r}
+
+vif_func<-function(in_frame,thresh=10,trace=T,...){
+  
+  require(fmsb)
+  
+  if(class(in_frame) != 'data.frame') in_frame<-data.frame(in_frame)
+  
+  #get initial vif value for all comparisons of variables
+  vif_init<-NULL
+  var_names <- names(in_frame)
+  for(val in var_names){
+    regressors <- var_names[-which(var_names == val)]
+    form <- paste(regressors, collapse = '+')
+    form_in <- formula(paste(val, '~', form))
+    vif_init<-rbind(vif_init, c(val, VIF(lm(form_in, data = in_frame, ...))))
+  }
+  vif_max<-max(as.numeric(vif_init[,2]), na.rm = TRUE)
+  
+  if(vif_max < thresh){
+    if(trace==T){ #print output of each iteration
+      prmatrix(vif_init,collab=c('var','vif'),rowlab=rep('',nrow(vif_init)),quote=F)
+      cat('\n')
+      cat(paste('All variables have VIF < ', thresh,', max VIF ',round(vif_max,2), sep=''),'\n\n')
+    }
+    return(var_names)
+  }
+  else{
+    
+    in_dat<-in_frame
+    
+    #backwards selection of explanatory variables, stops when all VIF values are below 'thresh'
+    while(vif_max >= thresh){
+      
+      vif_vals<-NULL
+      var_names <- names(in_dat)
+      
+      for(val in var_names){
+        regressors <- var_names[-which(var_names == val)]
+        form <- paste(regressors, collapse = '+')
+        form_in <- formula(paste(val, '~', form))
+        vif_add<-VIF(lm(form_in, data = in_dat, ...))
+        vif_vals<-rbind(vif_vals,c(val,vif_add))
+      }
+      max_row<-which(vif_vals[,2] == max(as.numeric(vif_vals[,2]), na.rm = TRUE))[1]
+      
+      vif_max<-as.numeric(vif_vals[max_row,2])
+      
+      if(vif_max<thresh) break
+      
+      if(trace==T){ #print output of each iteration
+        prmatrix(vif_vals,collab=c('var','vif'),rowlab=rep('',nrow(vif_vals)),quote=F)
+        cat('\n')
+        cat('removed: ',vif_vals[max_row,1],vif_max,'\n\n')
+        flush.console()
+      }
+      
+      in_dat<-in_dat[,!names(in_dat) %in% vif_vals[max_row,1]]
+      
+    }
+    
+    return(names(in_dat))
+    
+  }
+  
+}
+
+```
+
+&nbsp;
+
+
+We can calculate the VIF for our variables doing the following steps:
+
+1. We call the macro data frame:
+
+&nbsp;
+
+```{r, message=FALSE}
+
+library(readr)
+macro <- read_csv("../input/macro.csv")
+
+
+```
+&nbsp;
+
+2. We tranform all the categorical variables to numeric ones (excluding timestamp)
+&nbsp;
+
+```{r, echo=FALSE}
+#We put away the id's and the dependent variable:
+df<-macro[,c(-1)]
+
+macro$child_on_acc_pre_school<-as.numeric(as.factor(macro$child_on_acc_pre_school))
+macro$modern_education_share<-as.numeric(as.factor(macro$modern_education_share))
+macro$old_education_build_share<-as.numeric(as.factor(macro$old_education_build_share))
+df[is.na(df)] = -999
+
+```
+
+
+&nbsp;
+
+3. An finally we can run the function on the macro data set:
+
+&nbsp;
+
+```{r, echo=FALSE}
+df<- df[,c(-78,-81,-82)] #Remove not numerical features. Need to transform
+```
+
+```{r, message=FALSE, warning=FALSE}
+
+col<- vif_func(in_frame=df,thresh=5,trace=T)
+
+```
+
+
+<H4> And finally the most relevant columns for information gain are:</H4>
+
+&nbsp;
+
+
+```{r, echo=FALSE}
+col
+
+```
+
+
+
+&nbsp;
+
+
+
+<H5>As we can see, Andy Harless was totally right. From 99 variables in the macro data set, only 13 are relevant when taking into account a VIF <= 5.   </H5>
+
+&nbsp;
+&nbsp;
+
+<H3>I love making notebooks. If you find this one usefull, please give me an up!</H3>
+
+&nbsp;&nbsp;&nbsp;
