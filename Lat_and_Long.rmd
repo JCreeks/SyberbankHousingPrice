@@ -1,0 +1,259 @@
+---
+title: "Creating Lat and Longitude for all locations"
+author: "Nigel Carpenter"
+date: "May, 2017"
+output: 
+  html_document: 
+    code_folding: "show"
+    highlight: haddock
+    theme: readable
+    fig_width: 9
+    fig_height: 6
+---
+# Introduction
+
+In my earlier kernel I illustrated an approach to identify a property's location (https://www.kaggle.com/nigelcarpenter/property-location-attempt-3).
+
+I now take that one step further and provide code that allows you to extract the locations of all properties. To do this reliably and in a reasonable timeframe requires a few extra R tricks to ensure a location is returned even when road distances don't correctly intersect and use parallel processing to speed up otherwise slow single thread R procedures.
+
+Hence I thought it worthy of a separate kernel. 
+
+Once again I ask that if you find this useful that you please give it an upvote. 
+
+If this kernel gets sufficient support it is my intention to create a further script that shows how the lat lon location data can be used to apply a degree of automated and intelligent cleansing of this dataset.
+
+
+# Libraries and Data
+
+## Libraries
+```{r package loading, message=FALSE, warning=FALSE}
+
+# == General == #
+library(data.table) # read data with fread()
+
+# == Spatial == #
+library(rgdal)
+library(rgeos)
+library(sp)
+library(raster)
+
+# == Parallel processing == #
+library(doParallel)
+
+```
+## Data
+
+There are many properties sharing the same location, so to save processing time I create a data.table that contains only the unique locations in the combined train and test dataset. This materially reduces the number of locations from 38,133 down to 13,640.
+
+As in the earlier kernel we again read in the external shapefile data for roads and administrative areas.
+
+```{r, message=FALSE, warning=FALSE}
+
+# Load CSV files
+data.train <- fread("../input/sberbank-russian-housing-market/train.csv", sep=",", na.strings = "NA", select = c("id", "mkad_km", "ttk_km", "sadovoe_km", "sub_area"))
+data.test <- fread("../input/sberbank-russian-housing-market/test.csv", sep=",", na.strings = "NA", select = c("id", "mkad_km", "ttk_km", "sadovoe_km", "sub_area"))
+
+# Combine data.tables
+data <- rbind(data.train, data.test)
+data[, key:= paste(mkad_km, ttk_km, sadovoe_km, sub_area, sep=":")] 
+dt_locations <- data[ , .(mkad_km = mean(mkad_km),ttk_km = mean(ttk_km), sadovoe_km = mean(sadovoe_km), sub_area = first(sub_area), count = .N, lat = 0, lon = 0, tolerance_m = 0), by = 'key' ]
+
+setkey(dt_locations, count)
+setorder(dt_locations, -count)
+
+#remove unwanted data
+rm(data.test)
+rm(data.train)
+
+# Read external shapefiles
+
+# Roads in UTM planar coordindate reference system
+shp_mkad <- readOGR(dsn = "../input/sberbankmoscowroads", layer = "Rd_mkad_UTM", verbose=FALSE)
+shp_ttk <- readOGR(dsn = "../input/sberbankmoscowroads", layer = "Rd_third_UTM", verbose=FALSE)
+shp_sadovoe <- readOGR(dsn = "../input/sberbankmoscowroads", layer = "Rd_gard_UTM", verbose=FALSE)
+
+## administrative area
+shp_sub_area <-readOGR(dsn = "../input/sberbankmoscowroads", layer = "moscow_adm", verbose=FALSE)
+
+CRS_planar <- "+proj=utm +zone=36 +ellps=WGS72 +units=m +no_defs"
+CRS_WGS84 <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0 "
+
+```
+
+# Main Routine
+
+I now encapsulate the extraction of the lat and lon into a function that will subsequently be called from a parallel for loop. It's essential to make the loop robust. This code will take many hours to extract all the lats and longs. You don't want the rountine to fall over 5 minutes after you hit go!
+
+The primary cause of error here is poorly intersecting distances from the 3 roads. I showed in my previous kernel that to extract a location you had to buffer the 3 lines to ensure an intersection point. I could just buffer by a cautious 50m and hope it works for all points but guess what? It doesn't. That was an overnight PC run wasted!
+
+So instead I've created a list of tolerances and a loop that searches through tolerances until an intersection is found. The function records the lat lon and buffer tolerance applicable at the location.
+
+
+```{r, message=FALSE, warning=FALSE}
+# function to return 
+
+get_LatLon <-   function(i, mySubArea){
+  
+  # subset data by sub_area  
+  dt_sublocations <- dt_locations[sub_area == mySubArea,]
+  
+  # identify distances to roads
+  buff_mkad <- dt_sublocations[i,mkad_km] * 1000
+  buff_ttk <- dt_sublocations[i,ttk_km] * 1000
+  buff_sadovoe <- dt_sublocations[i,sadovoe_km] * 1000
+  
+  # add buffer to roads (already in planar)
+  shp_buff_mkad <- gBuffer(shp_mkad, width = buff_mkad)
+  shp_buff_ttk <- gBuffer(shp_ttk, width = buff_ttk)
+  shp_buff_sadovoe <- gBuffer(shp_sadovoe, width = buff_sadovoe)
+  
+  # now require a loop to progressively buffer lines until good intersection is formed
+  
+  # tolerance in meters 
+  lst_tolerance <- c(5, 10, 25, 50, 100, 250)
+  
+  for (intersect_tolerance in lst_tolerance) {
+    
+    # extract sub_area shape (with tolerance buffer)
+    shp_buff_subarea <- gBuffer(spTransform(shp_sub_area[shp_sub_area@data$RAION == mySubArea,], CRS(CRS_planar)), width=intersect_tolerance)
+
+    # clip buffered roads to buffered sub_area
+    shp_clip_mkad <- gIntersection(shp_buff_subarea,as(shp_buff_mkad, 'SpatialLines'), byid = TRUE )
+    shp_clip_ttk <- gIntersection(shp_buff_subarea,as(shp_buff_ttk, 'SpatialLines') , byid = TRUE)
+    shp_clip_sadovoe <- gIntersection(shp_buff_subarea,as(shp_buff_sadovoe, 'SpatialLines'), byid = TRUE)
+    
+    # if clip didn't work loop round again at next higher tolerance
+    if(is.null(shp_clip_mkad) | is.null(shp_clip_ttk) | is.null(shp_clip_sadovoe))  next
+    
+    # identify the intersection of 3 buffered lines
+    shp_intersect <- gIntersection(gBuffer(shp_clip_mkad, width=intersect_tolerance),
+                                   gBuffer(shp_clip_ttk, width=intersect_tolerance),
+                                   byid = TRUE)
+    
+    # if intersection couldn't be formed loop round again at next higher tolerance
+    if(is.null(shp_intersect)) next
+     
+    shp_intersect <- gIntersection(shp_intersect,
+                                   gBuffer(shp_clip_sadovoe, width=intersect_tolerance),
+                                   byid = TRUE)
+    
+    dt_sublocations[i,tolerance_m:=intersect_tolerance]
+    
+    # if we have an intersection break out of tolerance loop
+    if(!is.null(shp_intersect)) break
+  }
+  
+  
+  # identify the centroid of the intersection zone. 
+  shp_latlon <- gCentroid(shp_intersect)
+      
+  #finally convert to WGS84 from which lat and long can be extracted from @coords
+  shp_latlon <- spTransform(shp_latlon, CRS(CRS_WGS84))
+      
+  dt_sublocations[i,lat:=shp_latlon@coords[[2]]]
+  dt_sublocations[i,lon:=shp_latlon@coords[[1]]]
+    
+  
+  return(dt_sublocations[i,])
+}
+
+```
+
+# Parallel Loop
+
+Having defined our function I now call it from a parallel foreach loop. The spatial routines used to extract the lat and lon are single threaded. In order to use your machines resources and speed up the calculation you can often use the %dopar% loop to share the work among available cpu threads. 
+
+The %dopar$ call manages the process of collating the results back into a single data.table. This technique can often be applied to speed up an otherwise slow task.
+
+Now for manangebility within Kaggle kernels I've chosen to create a loop that extracts lat and lon for each subarea in turn and outputs a csv. Here we'll just run for subarea Horoshevskoe, home to Triumph Palace on of Moscows tallest apartment blocks with 57 floors. (https://en.wikipedia.org/wiki/List_of_tallest_buildings_in_Moscow). When running locally you can change the loop to create all subareas. On my home machine the full run took 2.5 hours. The speed you achieve will depend on available CPUs and processor speed.
+
+
+```{r, message=FALSE, warning=FALSE}
+
+
+lst_subarea <- unique(dt_locations$sub_area)
+
+#clear down memory to get through Kaggle kernel limits
+gc()
+
+# swap these lines when running locally
+#for (mySubArea in lst_subarea[1:length(lst_subarea)]){  
+for (mySubArea in c("Horoshevskoe")){
+  
+  # Kaggle has 16 cores but only 8GB memory, need to reduce cores to save memory
+  no_cores <- detectCores() - 8 
+  cl <- makeCluster(no_cores) 
+  registerDoParallel(cl) 
+  
+  # swap out these lines when running locally
+  #result <- foreach(i=1:nrow(dt_locations[sub_area == mySubArea]), .combine = rbind, .packages=c("sp", "raster", "rgdal", "rgeos", "data.table")) %dopar% get_LatLon(i, mySubArea)
+  result <- foreach(i=1:(nrow(dt_locations[sub_area == mySubArea])-50), .combine = rbind, .packages=c("sp", "raster", "rgdal", "rgeos", "data.table")) %dopar% get_LatLon(i, mySubArea)
+  
+  stopCluster(cl)
+  
+  write.csv(result,paste0(mySubArea, "_lat_lon.csv"), row.names = FALSE)
+
+} 
+
+```
+
+
+# Inspecting the output
+
+A quick table and map shows the resulting output. And if you look out for the red marker on the map showing the official location of Triumph-Palace, you'll see our marker very close by.
+
+```{r, message=FALSE, warning=FALSE}
+
+library(DT)
+
+datatable(result, style="bootstrap", class="table-condensed", options = list(dom = 'tp',scrollX = TRUE))
+
+library(leaflet)
+
+r <- leaflet() %>%
+   addTiles() %>%  # Add default OpenStreetMap map tiles
+   addMarkers(data=result, lat = ~lat, lng = ~lon) %>%
+   addCircleMarkers(lat = 55.798333, lng = 37.520833, col = "red")
+   
+r  # Print the map
+
+```
+
+# Data anomaly: red circle in the Red Square!
+
+Now I want to illustrate some concerns about the quality of location data. I'll extract all the locations for the sub_area of Tverskoe and plot them on a map. The colou of the circle will reflect the number of properties sold at that location. 
+
+We see a red circle in the Red Square! Supposedly over 700 properties have been sold in this exact location.
+
+```{r, echo = FALSE, message= FALSE, warning=FALSE}
+
+rm(result)
+gc()
+
+for (mySubArea in c("Tverskoe")){
+  
+  # Kaggle has 16 cores but only 8GB memory, need to reduce cores to save memory
+  no_cores <- detectCores() - 8 
+  cl <- makeCluster(no_cores) 
+  registerDoParallel(cl) 
+  
+  # swap out these lines when running locally
+  res_Tverskoe <- foreach(i=1:nrow(dt_locations[sub_area == mySubArea]), .combine = rbind, .packages=c("sp", "raster", "rgdal", "rgeos", "data.table")) %dopar% get_LatLon(i, mySubArea)
+  
+  stopCluster(cl)
+  
+  write.csv(res_Tverskoe,paste0(mySubArea, "_lat_lon.csv"), row.names = FALSE)
+
+} 
+
+pal <- colorNumeric(palette = "RdYlGn",domain = res_Tverskoe$count, reverse= TRUE)
+
+r <- leaflet(data=res_Tverskoe) %>%
+   addTiles() %>%  # Add default OpenStreetMap map tiles
+   addCircles(lat = ~lat, lng = ~lon, col = ~pal(count), fill = TRUE, weight = 10, label = ~paste0("Count: ", count))%>%
+   addLegend("topright", pal = pal, values = ~count, title = "Property count", opacity = 0.8)
+   
+r  # Print the map
+
+
+```
