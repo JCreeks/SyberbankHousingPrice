@@ -1,0 +1,482 @@
+---
+title: "Map visualizations with external shapefile"
+author: "Jordan tremoureux"
+date: "May 4, 2017"
+output: 
+  html_document: 
+    code_folding: "show"
+    highlight: haddock
+    theme: readable
+---
+# Introduction
+
+As you might have seen, Kernels now support [querying multiple data sources](https://www.kaggle.com/product-feedback/32423#post179905). Let's try this awesome resource!  
+I recently shared an [external dataset](https://www.kaggle.com/jtremoureux/administrative-divisions-of-moscow), which is a shapefile of the 146 raions in Moscow. And they match perfectly with the 146 **sub_area** in this competition dataset. (I translated all of them from Russian, just for you guys 😉) 
+
+Another goal of this Kernel, is to use this shapefile and visualize some features, in a map!  
+
+Since I'm new to map visualization in R, I'll try and play with some packages:
+
+  - **sp** used to work with Spatial Polygons, has his own plot function.
+  - **ggplot2** the famous one.
+  - **ggmap** to add tiles.
+  - **plotly** for interactivity.
+  - **ggiraph** also for interactivity. (I love this one)
+  - **gganimate** to animate the ggplot.
+  - **leaflet** dedicated to web mapping.
+  - .. any other suggestion?
+
+# Libraries and Data
+
+## Libraries
+```{r package loading, message=FALSE, warning=FALSE}
+rm(list=ls())
+# == General == #
+library(data.table) # read data with fread()
+library(dplyr)  # data manipulation 
+library(stringr) # easy string manipulation
+library(DT)
+# == Shapefile == #
+library(sp) # work with Spatial Polygons
+library(rgdal) # read the shapefile with readOGR()
+
+# == Color palette == #
+library(RColorBrewer)
+# library(viridis)
+
+# == Dataviz == #
+library(ggplot2)
+library(ggthemes)
+library(ggmap) # maps with ggplot
+library(ggiraph) # ggplot interactive <3
+library(gganimate) # animate ggplot
+library(plotly) # interactive plot
+
+library(leaflet) # interactive maps
+# library(maps)
+# library(rgeos)
+```
+```{r addTiles resolution, include=FALSE}
+# 
+# addTiles = function (map, urlTemplate = "http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+#                      attribution = NULL, layerId = NULL, group = NULL, options = tileOptions())
+# {
+#   options$attribution = attribution
+#   if (missing(urlTemplate) && is.null(options$attribution))
+#     options$attribution = paste("? OpenStreetMap",
+#                                 "contributors, CC-BY-SA")
+#   invokeMethod(map, getMapData(map), "addTiles", urlTemplate,
+#                layerId, group, options)
+# }
+```
+
+## Multiple data sources
+
+We first load the competitions datasets.
+```{r data loading}
+train_df <- fread("../input/sberbank-russian-housing-market/train.csv")
+test_df <- fread("../input/sberbank-russian-housing-market/test.csv")
+```
+
+And then the [external shapefile dataset](https://www.kaggle.com/jtremoureux/administrative-divisions-of-moscow), with the <code>readOGR()</code> from the **rgdal** package.  
+
+```{r}
+shp <- readOGR(dsn = "../input/administrative-divisions-of-moscow", layer = "moscow_adm")
+```
+
+This shapefile contains 146 features, the 146 raions = **sub_area**.  
+See [jason](https://www.kaggle.com/jasontam)'s post [here](https://www.kaggle.com/c/sberbank-russian-housing-market/discussion/32201#178981) to see how to reed it in Python with **geopandas**.  
+You can access the data with
+ 
+```{r, include=FALSE}
+# Rename the feature "RAION" to "sub_area", to match with and train_df/test_df
+shp$sub_area <- shp$RAION
+shp$RAION <- NULL
+# Remove Russian codes, not needed here
+shp$OKATO <- NULL
+shp$OKTMO <- NULL
+```
+
+This object is a<code> class(shp)  > `r class(shp)` </code>.  
+You can access the data with <code>@data</code>.
+
+```{r}
+head(shp@data)
+```
+
+For the caracteristics of the polygons, use <code>@polygons</code>.
+
+```{r}
+# get the box where are the polygons
+bbox <- shp@bbox
+# get the centroids of each polygons
+centroids <- coordinates(shp)
+mo_shp <- shp
+mo_shp$long_c <- centroids[,1]
+mo_shp$lat_c <- centroids[,2]
+mo_data <- mo_shp@data
+```
+
+# Visualizations
+
+## The default R <code>plot()</code> function
+
+The **OKGRUS** feature, represent the 12 twelve administrative okrugs, an official division of the federal city of Moscow. They are in turn subdivided into district/raions, the **sub_area** feature.  
+Let's use the basic R <code>plot()</code> function to plot this districts, and there centroids.  
+```{r}
+okrugs_pal <- brewer.pal(12, "Set3") # Define a nice color palette with RColorBrewer
+plot(mo_shp, border = "#57595b", col = okrugs_pal[as.numeric(mo_shp$OKRUGS)], main = "Okrugs, raions and centroids")
+points(centroids, col = "black", pch = 20, cex = 0.3)
+legend("bottomright", title = "Okrug", legend = sort(unique(mo_shp$OKRUGS)),  fill = okrugs_pal, border = "#57595b", cex=0.8)
+```
+
+## The <code>spplot()</code> function from the **sp** package
+
+Easy!
+```{r}
+spplot(mo_shp, c("OKRUGS"), main = "OKRUGS", col.regions=okrugs_pal)
+```
+
+Let's plot something else.
+We compute some properties for each area:  
+
+- The total number of transaction: **nb**.
+- The mean amout of each transaction: **mean_price_doc**.
+- The square meter price: **mean_price_sq**.
+
+```{r}
+# Creating some features from the dataset, that we want to plot 
+data <- train_df %>%
+  filter(full_sq > 0) %>% # to avoid division by 0
+  mutate(price_sq = price_doc/full_sq) %>% # Price per square meter
+  group_by(sub_area) %>%
+  # Compute the mean of price_doc and price_sq in each sub_area
+  summarise(nb = n(), # The number of transaction in each area
+            mean_price_doc = mean(price_doc),
+            mean_price_sq = mean(price_sq))
+
+# Add it to our SPDF
+mo_shp <- merge(mo_shp , data)
+
+ncolors <- 15
+pal3 <- colorRampPalette(c("grey90", "red"))(ncolors) # A palette from grey to red
+
+spplot(mo_shp, c("mean_price_doc"), main = "Transaction prices", col.regions = pal3,
+       sub = "", cuts = ncolors-1, col = "transparent")
+```
+
+We can also zoom in the center of Moscow.
+
+```{r}
+# ZOOM IN THE CENTER
+minlong <- min(mo_data[mo_data$OKRUGS=="North-Western","long_c"])-0.06
+maxlong <- max(mo_data[mo_data$OKRUGS=="Eastern","long_c"])+0.09
+minlat <- min(mo_data[mo_data$OKRUGS=="Southern","lat_c"])-0.02
+maxlat <- max(mo_data[mo_data$OKRUGS=="Northern","lat_c"])+0.03
+
+spplot(mo_shp, c("mean_price_doc"), main = "Center transaction prices", col.regions = pal3,
+       sub = "Average Per Capita Income", cuts = ncolors-1, col = "grey10",
+       xlim = c(minlong, maxlong), ylim = c(minlat, maxlat))
+```
+
+## Add some tiles with <code>get_map()</code> from **ggmap**.
+
+```{r, eval=FALSE, message=FALSE, warning=FALSE}
+# we can download the map from Google (default)
+gmap <- get_map(location = bbox,
+                maptype = "terrain",
+                color = "color") # "color" or "bw" (black and white)
+# create the raster image for spplot()
+raster <- list("grid.raster", gmap,
+                  x = mean(bbox["x",]),
+                  y = mean(bbox["y",]),
+                  width = bbox["x",2]-bbox["x",1],
+                  height = bbox["y",2]-bbox["y",1],
+                  default.units = "native", first = TRUE)
+
+spplot(mo_shp, c("mean_price_doc"), sp.layout = raster, main = "Transaction prices", col.regions = pal3,
+       sub = "", cuts = ncolors-1, col = "black", lwd = 1)
+```
+
+```{r, eval=FALSE, include=FALSE}
+# /!\ We can use get_map on Kaggle
+```
+
+<img src="https://s5.postimg.org/x8hksawk7/ggmap2.png" align="middle">
+
+## Directly use **ggplot** {.tabset}
+
+We will create some new features to plot. In the training dataset, the feature frm **sub_area** to **build_count_after_1995** are constant in each area. Those variables are in fact some properties of the area.   
+We will select one line for each area, and get those features
+
+```{r}
+data_area <- train_df %>%
+  filter(!duplicated(train_df$sub_area)) %>% # select one row for each area
+  select(sub_area:build_count_after_1995) # select the area properties
+# Add it to our SPDF
+mo_shp <- merge(mo_shp , data_area)
+```
+
+We first need to use the function <code>fortify()</code> in order to get a dataframe that <code>ggplot()</code> can read.
+
+```{r}
+mo_df <- mo_shp %>% fortify(region = 'sub_area')
+mo_df$id <- as.factor(mo_df$id)
+gg_df <- left_join(mo_df, mo_shp@data, by = c("id" = "sub_area"))
+```
+
+We now can use <code>ggplot()</code> !
+
+```{r, include=FALSE}
+# source: http://rstudio-pubs-static.s3.amazonaws.com/152833_56a4917734204de7b37881d164cf8051.html
+# tooltip (for accent in html)
+conv_accents <- function(x) {
+  x <- gsub(pattern = "è", replacement = "&egrave;", x = x)
+  x <- gsub(pattern = "é", replacement = "&eacute;", x = x)
+  x <- gsub(pattern = "ê", replacement = "&ecirc;", x = x)
+  x <- gsub(pattern = "ô", replacement = "&ocirc;", x = x)
+  x <- gsub(pattern = "'", replacement = "&acute;", x = x)
+  return(x)
+}
+gg_df$id <- conv_accents(gg_df$id)
+```
+
+### Green zone part
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+gg_df$ttip1 <- paste0("<b>", gg_df$id, "</b> : ", round(gg_df$indust_part,3), " green zone part.")
+
+p1 <- ggplot(gg_df, aes(long, lat, group=group, fill=green_zone_part, text=ttip1)) +
+  theme_classic() +
+  geom_polygon() +
+  geom_path(color="white", size = 0.05) +
+  coord_map() + theme_tufte(ticks = FALSE) + 
+  scale_fill_gradient(low = "#e5f5e0", high = "#00441b") +
+  theme(axis.text = element_blank(), axis.title = element_blank())
+p1
+```
+
+### Industrial part
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+gg_df$ttip2 <- paste0("<b>", gg_df$id, "</b> : ", round(gg_df$green_zone_part,3), " insdustrial part.")
+
+p2 <- ggplot(gg_df, aes(long, lat, group=group, fill=indust_part, text=ttip2)) +
+  theme_classic() +
+  geom_polygon() +
+  geom_path(color="white", size = 0.05) +
+  coord_map() + theme_tufte(ticks = FALSE) + 
+  scale_fill_gradient(low = "#fff5eb", high = "#7f2704") +
+  theme(axis.text = element_blank(), axis.title = element_blank())
+p2
+```
+
+## Convert the ggplot with <code>ggplotly()</code> {.tabset}
+
+I'm still getting an error with plotly in the kaggle kernel... sorry!  
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# ggplotly(p1, tooltip = "text")
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# ggplotly(p2, tooltip = "text")
+```
+
+## I ❤️ **ggiraph** !
+
+With **ggiraph** you can use the same syntax, and just add <code>_interactive</code> to your functions, like <code>geom_polygon_interactive</code>, <code>geom_bar_interactive</code>.. etc  
+You can provide 3 new aesthetics for interactivity:  
+
+- **tooltip**: what to display when mouse is over elements.
+- **onclick**: javascript function to run when user click on elements.
+- **data_id**: which variable is associated with those elements.  
+
+We will display the number of inhabitant in a region (feature **raion_popul**).  
+
+
+### On over?
+On over we want to display this number of inhabitant.
+```{r}
+# The tooltip to display on over:
+gg_df$ttip <- paste0(
+  "<b>", gg_df$id, "</b> : ",
+  prettyNum(gg_df$raion_popul, big.mark = " "), " inhabitants.")
+```
+
+### On click?
+
+And let's make a fun click.
+We will use the google query expansion [I'm Feeling Lucky](https://en.wikipedia.org/wiki/Google_Search#.22I.27m_Feeling_Lucky.22). And try to go to the wikipedia page of the district!
+
+```{r}
+# The javascript code to run on click:
+gg_df$click <- sprintf("window.open(\"%s%s%s\")",
+  "http://www.google.com/search?q=wikipedia+", gg_df$id, "+District+Moscow&btnI=I&acute;m%20feeling%20lucky")
+```
+
+### The ggiraph plot!
+```{r, message=FALSE, warning=FALSE}
+p <- ggplot(gg_df, aes(long, lat, group=group)) + theme_classic() +
+  geom_polygon_interactive(aes(fill=raion_popul,# <- add "_interactive" to "geom_polygon"
+                               tooltip = ttip,  # tooltip to show on over
+                               onclick = click, # javascript to run on click
+                               data_id = id)) + # column associated to polygon element
+  coord_map() + theme_tufte(ticks = FALSE) +
+  scale_fill_continuous(low = "#f7f4f9", high = "#980043") +
+  theme(axis.text = element_blank(), axis.title = element_blank(),
+        plot.title = element_text(hjust = 0.8, face = "bold")) +
+  ggtitle(" Click on the map! 👌 ")
+```
+
+We also want to change change the css style on hover, to highlight the district. We do this with **hover_css**.
+
+```{r}
+ggiraph(code = {print(p)}, hover_css = "fill:#67001f;stroke:black;stroke-width:2;")
+```
+
+WAW! I'm really impress by the result. **ggiraph** is awesome, congratz to its French creator [David Gohel 🇫🇷](https://github.com/davidgohel).
+
+## Animate your ggplot with **gganimate**
+
+We will plot the number of transaction per month. Let's create the data.
+```{r, message=FALSE, warning=FALSE}
+# We'll use the train and test dataset.
+df_anim <- rbind(train_df[,c("sub_area", "timestamp")],
+                 test_df[,c("sub_area", "timestamp")]) %>%
+  mutate(month = str_sub(timestamp, end = 7), # Get the month like AAAA-MM
+         sub_area = as.factor(sub_area),
+         month = as.factor(month)) %>%
+  group_by(sub_area, month) %>%
+  summarise(count = n()) # We count the number of transaction per month in each area
+
+# We enumerate all the possible combinaison of sub_area & month
+all_anim <- expand.grid(sub_area = unique(df_anim$sub_area), month = unique(df_anim$month))
+# We join our data and fill the missing value with 0 (no transaction)
+df_anim <- left_join(all_anim, df_anim)
+df_anim[is.na(df_anim)] <- 0
+# We add it to our dataframe
+df_anim <- left_join(mo_df, df_anim, by = c("id" = "sub_area"))
+```
+
+```{r}
+# Just create a simple palette
+nb_col <- 5
+qu <- quantile(x = df_anim$count, probs = seq(from = 0, to = 1, length.out = nb_col))
+qu <- round(qu)
+df_anim$count_cut <- cut(
+  x = df_anim$count,
+  breaks = qu, labels = paste(qu[-length(qu)], qu[-1], sep = " - "),
+  include.lowest = TRUE
+)
+
+p <- ggplot(df_anim, 
+            aes(long, lat, group=group, fill=count_cut, 
+                frame=month)) + # <- use the frame aesthetic to create one ggplot per month
+  theme_classic() +
+  geom_polygon() +
+  geom_path(color="white", size = 0.05) +
+  coord_map() + theme_tufte(ticks = FALSE) +
+  scale_fill_manual(
+    values = colorRampPalette(c("#e0ecf4", "#8856a7"))(nb_col-1)
+  ) +
+  theme(axis.text = element_blank(), axis.title = element_blank())# no need for lat_long axis
+```
+
+Now, we use the <code>gganimate()</code> function to create one ggplot per frame=month, so `r length(unique(df_anim$month))` ggplots! And then stick them together!
+
+```{r, eval=FALSE, message=FALSE, warning=FALSE}
+gganimate(p, interval = 0.2)
+```
+
+<img src="https://s5.postimg.org/r2g4lk2mv/animate.gif" align="middle">   
+**Not bad!**
+
+## LEAFLET
+
+With leaflet you can <code>addTiles()</code> under your polygons.  
+You can also provide multiple layers to show.  
+```{r}
+labels <- sprintf(
+  "<strong>RAION: %s</strong><br/>OKRUG: %s <br/>count: %d <br/>Mean price: %s<br/>Mean price/m2: %s",
+  mo_shp@data$sub_area, mo_shp@data$OKRUGS, mo_shp@data$nb,
+  prettyNum(round(mo_shp@data$mean_price_doc,0),big.mark = " "),  prettyNum(round(mo_shp@data$mean_price_sq,0),big.mark = " ")) %>% lapply(htmltools::HTML)
+
+# Create a continuous palette function
+nb_pal <- colorNumeric(palette = "Blues", domain = mo_shp@data$nb)
+mp_pal <- colorNumeric(palette = "Oranges", domain = mo_shp@data$mean_price_doc)
+mppsm_pal <- colorNumeric(palette = "Greens", domain = mo_shp@data$mean_price_sq)
+
+lft <- leaflet(mo_shp) %>%
+  addTiles(group = "OSM") %>%
+  addPolygons(color = "#232a35", weight = 1, smoothFactor = 1,
+              opacity = 1.0, fillOpacity = 0.8,
+              fillColor = ~okrugs_pal[OKRUGS],
+              highlightOptions = highlightOptions(color = "white", weight = 2,
+                                                  bringToFront = TRUE),
+              label = labels,
+              labelOptions = labelOptions(
+                style = list("font-weight" = "normal", padding = "3px 8px"),
+                textsize = "15px",
+                direction = "auto"),
+              group = "Okrug") %>%
+  addPolygons(color = "#232a35", weight = 1, smoothFactor = 1,
+              opacity = 1.0, fillOpacity = 0.7,
+              fillColor = ~nb_pal(nb),
+              highlightOptions = highlightOptions(color = "white", weight = 2,
+                                                  bringToFront = TRUE),
+              label = labels,
+              labelOptions = labelOptions(
+                style = list("font-weight" = "normal", padding = "3px 8px"),
+                textsize = "15px",
+                direction = "auto"),
+              group = "Count")  %>%
+  addPolygons(color = "#232a35", weight = 1, smoothFactor = 1,
+              opacity = 1.0, fillOpacity = 0.7,
+              fillColor = ~mp_pal(mean_price_doc),
+              highlightOptions = highlightOptions(color = "white", weight = 2,
+                                                  bringToFront = TRUE),
+              label = labels,
+              labelOptions = labelOptions(
+                style = list("font-weight" = "normal", padding = "3px 8px"),
+                textsize = "15px",
+                direction = "auto"),
+              group = "Mean price")  %>%
+  addPolygons(color = "#232a35", weight = 1, smoothFactor = 1,
+              opacity = 1.0, fillOpacity = 0.7,
+              fillColor = ~mppsm_pal(mean_price_sq),
+              highlightOptions = highlightOptions(color = "white", weight = 2,
+                                                  bringToFront = TRUE),
+              label = labels,
+              labelOptions = labelOptions(
+                style = list("font-weight" = "normal", padding = "3px 8px"),
+                textsize = "15px",
+                direction = "auto"),
+              group = "Mean price m2")  %>%
+  # Layers control
+  addLayersControl(
+    baseGroups = c("Okrug", "Count", "Mean price", "Mean price m2"),
+    overlayGroups = c("OSM"),
+    options = layersControlOptions(collapsed = FALSE)
+  )
+lft
+```
+
+# Conclusions
+
+- Querying multiple sources from one Kernel is really awesome.  
+- **R** is really powerfull to plot maps. My favourites are **ggplot+ggiraph** and **leaflet** and you?
+- You may want to use this external dataset for the competition. Indeed, maybe replacing the **sub_area** with the **longitude and latitude** will improve your model!
+
+I read and use a lot of good ressources to create this kernel, especially:  
+
+- This **sp** [tutorial](http://www.nickeubank.com/wp-content/uploads/2015/10/RGIS3_MakingMaps_part1_mappingVectorData.html) by Nick Eubank.  
+- This [one](http://www.markhneedham.com/blog/2014/11/17/r-ggmap-overlay-shapefile-with-filled-polygon-of-regions/) for **ggplot+ggmap**, by Mark Needham.  
+- The **ggiraph** [intro](https://davidgohel.github.io/ggiraph/articles/an_introduction.html) and this [awesome example (fr)](http://rstudio-pubs-static.s3.amazonaws.com/152833_56a4917734204de7b37881d164cf8051.html)  
+- **gganimate** [here](https://scriptsandstatistics.wordpress.com/2016/12/22/how-to-plot-animated-maps-with-gganimate/) by Koehlern, [here](https://rpubs.com/omicsdata/gganimate) by Rpubs, and  [here](https://github.com/dgrtwo/gganimate) is the official github.  
+- This **leaflet** Rstudio [tutorial](https://rstudio.github.io/leaflet/showhide.html) is really cool!
+
+# Now ?
+
+I really hope that you enjoyed seeing those visualizations, and I'd be glad to receive your critics, comments, questions and proposal to improve this kernel! So feel free to leave a comment, I'll answer you with pleasure.  
+And if you liked this kernel, give it a 👍!
