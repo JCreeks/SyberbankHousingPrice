@@ -1,0 +1,363 @@
+---
+title: "An Updated Collection of New Features"
+author: "Philipp Spachtholz"
+output:
+  html_document:
+    fig_height: 4
+    fig_width: 7
+    theme: paper
+---
+
+There are already a lot of good ideas for feature engineering around for this competition. However, they are all scattered across
+different kernels and discussion threads.**Therefore, my plan here is to provide an easily accessible and extensible list of ideas for feature engineering (together with their implementation in R).**
+
+```
+Recent updates:
+- added Feature Importance Analysis
+- added more Data cleaning
+- grouped appartments in the same building complex together
+```
+
+Feel free to add new ideas in the comments and
+I'll add them to the list and please don't forget to **upvote** if you find it useful :-).
+
+Having said all that, let's jump right into it:
+
+### Initialization
+```{r message=FALSE, warning=FALSE}
+  library(data.table)
+  library(dplyr)
+  library(lubridate)
+  library(stringr)
+  library(caret)
+  library(Matrix)
+  library(xgboost)
+  library(geosphere)
+  library(rgdal)
+
+  train <- fread('../input/sberbank-russian-housing-market/train.csv')
+  
+```
+
+##### Some data cleaning
+
+```{r }
+train <- train %>% 
+  mutate(max_floor = as.numeric(max_floor), kitch_sq=as.numeric(kitch_sq), num_room=as.numeric(num_room), build_year=as.numeric(build_year), sub_area=as.factor(sub_area)) 
+
+train <- train %>% 
+  filter(build_year < 2020 | is.na(build_year))
+
+train <- train %>% mutate(strange_full_sq = ifelse(full_sq <= 1, full_sq+1,0), full_sq = ifelse(full_sq > 800 | full_sq <= 1, NA, full_sq))
+
+train <- train %>% mutate(strange_life_sq = ifelse(life_sq <= 1, life_sq+1,0), strange_life_sq= ifelse(is.na(strange_life_sq),0,strange_life_sq), life_sq = ifelse(life_sq > 400 | life_sq <= 1, NA, life_sq))
+
+train <- train %>% mutate(kitch_sq = as.numeric(kitch_sq),strange_kitch_sq = ifelse(kitch_sq <= 1, kitch_sq+1,0),kitch_sq = ifelse(kitch_sq > 200 | kitch_sq <= 1, NA, kitch_sq))
+
+
+train <- train %>% mutate(num_room = as.numeric(num_room))
+
+train <- train %>% mutate(build_year = as.numeric(build_year), strange_build_year = ifelse(build_year <= 1, build_year+1,0), build_year = ifelse(build_year > 2018 | build_year < 1860, NA, build_year))
+
+train <- train %>% mutate(floor = ifelse(floor > 45, NA, floor))
+
+train <- train %>% mutate(max_floor = as.numeric(max_floor), strange_max_floor = ifelse(max_floor <= 1, max_floor+1,0), max_floor = ifelse(max_floor > 60 | max_floor <=1, NA, max_floor))
+
+train <- train %>% mutate(state = as.numeric(state), state = ifelse(state > 4, NA, state))
+
+train <- train %>% mutate(material = as.factor(material), material = ifelse(material == 3, NA, material))
+
+train <- train %>% mutate(product_type = factor(product_type))
+
+train <- train %>% mutate(sub_area = factor(sub_area))
+
+# more cleaning
+train <- train %>% filter(kitch_sq < full_sq | is.na(kitch_sq))
+train <- train %>% filter(kitch_sq < life_sq | is.na(kitch_sq))
+
+train <- train %>% mutate(num_room = ifelse(num_room==0,NA,num_room))
+
+
+```
+
+### Time features
+
+#### Split the timestamp feature
+
+```{r }
+  # year
+  train <- train %>% 
+    mutate(year = year(timestamp))
+
+  # year_month
+  train <- train %>% 
+    mutate(year_month = make_date(year(timestamp),month(timestamp)))
+```
+
+
+#### Get month, week, weekday
+
+```{r }
+  # month of year
+  train <- train %>% 
+    mutate(month_of_year = month(train$timestamp))
+
+  # week of year
+  train <- train %>% 
+    mutate(week_of_year = week(train$timestamp))
+
+  # day of month
+  train <- train %>% 
+    mutate(day_of_month = mday(train$timestamp))
+  
+  # weekday
+  train <- train %>% 
+    mutate(day_of_week = wday(train$timestamp))
+
+```
+
+
+### House characteristics
+
+
+```{r }
+  # number of floors to the top of house
+  train <- train %>% 
+    mutate(floor_from_top = max_floor - floor)
+  
+  # relative position of floor in house
+  train <- train %>% 
+    mutate(floor_by_maxfloor = floor/max_floor)
+  
+  # average room size
+  train <- train %>% 
+    mutate(roomsize = (life_sq-kitch_sq)/num_room) 
+  
+  # relative proportion of living area
+  train <- train %>% 
+    mutate(life_proportion = life_sq/full_sq)
+  
+  # relative proportion of kitchen area
+  train <- train %>% 
+    mutate(kitchen_proportion = kitch_sq/full_sq)
+  
+  # extra area
+  train <- train %>% 
+    mutate(extra_area = full_sq - life_sq)
+  
+  # age of house at time of sale
+  train <- train %>% 
+    mutate(age_at_sale = interval(make_date(year=build_year),timestamp) / years(1))  
+  
+```
+
+### Grouping appartments together
+Some appartments seem to be in the same building. They have the same sub_area and distance to metro.
+```{r}
+  # assign a common name to them
+  train <- train %>% 
+    mutate(appartment_name = factor(str_c(sub_area,format(metro_km_avto,digits=3))))
+  
+  # get the number of appartments in group
+  train <- train %>% 
+    group_by(appartment_name) %>% 
+    tally() %>% 
+    right_join(train,by="appartment_name")
+
+```
+
+
+
+### General sale characteristics
+```{r }
+  # number of sales per year_month
+  train <- train %>% 
+    group_by(year_month) %>% 
+    summarize(n_sales_permonth = n()) %>% 
+    right_join(train,by="year_month")
+```
+
+### Sub Area characteristics
+
+#### Location data
+For the location data you have to read in an [external data file](https://www.kaggle.com/jtremoureux/administrative-divisions-of-moscow). You can find a tutorial [here](https://www.kaggle.com/product-feedback/32423#post179905).
+
+```{r warning=FALSE, message=FALSE}
+  # Longitude and Latitude
+  shp <- readOGR(dsn = "../input/administrative-divisions-of-moscow", layer = "moscow_adm")
+  centroids <- coordinates(shp)
+  sub_area <- shp$RAION
+  okrug <- shp$OKRUGS
+  location_data <- data.frame(sub_area = sub_area, okrug = okrug, longitude=centroids[,1], latitude=centroids[,2])
+
+  train <- train %>%
+    left_join(location_data,by="sub_area")
+
+  # Calculate distance from Kremlin for each sub_area
+  kremlin = data.frame(longitude = 37.617664,latitude = 55.752121)
+  train <- train %>%
+    group_by(sub_area) %>%
+    top_n(n = 1, wt=id) %>%
+    ungroup %>%
+    mutate(distance_from_kremlin = distm(.[c("longitude","latitude")], kremlin, fun=distHaversine)) %>%
+    select(sub_area, distance_from_kremlin) %>%
+    right_join(train, by="sub_area")
+
+```
+
+
+#### General price level of Sub Areas
+```{r}
+  # average price per raion
+  train <- train %>% 
+    group_by(sub_area) %>% 
+    summarize(mean_price_raion = mean(price_doc)) %>% 
+    right_join(train,by="sub_area")
+
+  # average price per raion per year
+  train <- train %>% 
+    group_by(sub_area, year) %>% 
+    summarize(mean_price_raion_year = mean(price_doc)) %>% 
+    right_join(train,by=c("sub_area","year"))
+  
+  # average price per sqm per raion
+  train <- train %>% 
+    group_by(sub_area) %>% 
+    summarize(mean_price_persqm_raion = mean(price_doc/full_sq, na.rm=T)) %>% 
+    right_join(train,by="sub_area")
+  
+```
+
+#### Population characteristics
+```{r }
+  # population density per raion (i.e. Number of people per square meter)
+  train <- train %>% 
+    mutate(pop_density_raion = raion_popul/area_m)
+  
+  # Demographic structure of the raions
+  train <- train %>% 
+    mutate(young_proportion = young_all/full_all) # proportion of people younger than working age
+  train <- train %>% 
+    mutate(work_proportion = work_all/full_all) # proportion of people in working age
+  train <- train %>% 
+    mutate(retire_proportion = ekder_all/full_all) # proportion of people older than working age
+
+```
+
+#### Building information
+```{r }
+  # average building height per raion
+  train <- train %>% 
+    group_by(sub_area) %>% 
+    summarize(mean_building_height = mean(max_floor,na.rm=T)) %>% 
+    right_join(train,by="sub_area")
+
+  # Proportion of houses with certain build materials (e.g. 10% build_count_wood)
+  train<-train %>% 
+    mutate_each(funs(pct = (.)/raion_build_count_with_builddate_info),matches('^build_count_[a-zA-Z]*$'))
+```
+
+#### Educational characteristics
+```{r }
+  # ratio of number of pupils and preschool seats
+  train <- train %>% 
+    mutate(ratio_preschool = children_preschool / preschool_quota)
+
+  # ratio of number of pupils and school seats
+  train <- train %>% 
+    mutate(ratio_school = children_school / school_quota)
+
+```
+
+
+### dataset related features
+```{r}
+  # number of missing values per row (this is going to take a while)
+  train <- train %>% 
+    mutate(count_na_perrow = apply(., 1, function(x) sum(is.na(x))))
+```
+
+
+### Feature Importance
+#### Features
+```{r}
+outcomes <- train$price_doc
+
+basic_features <- c("full_sq", "life_sq", "kitch_sq", "num_room", "floor", "max_floor", "material", "build_year", "state", "product_type")
+
+new_features <- c("month_of_year","week_of_year", "day_of_month", "day_of_week", "floor_from_top", "floor_by_maxfloor", "roomsize", "life_proportion", "kitchen_proportion", "extra_area", "age_at_sale", "n_sales_permonth", "distance_from_kremlin", "young_proportion", "work_proportion", "retire_proportion", "mean_building_height", "ratio_preschool",
+"ratio_school", "count_na_perrow")
+```
+
+## Importance Analysis
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+  predictors <- c(basic_features,new_features)
+
+  train_set <- select(train, one_of(predictors))
+
+  dummy <- dummyVars(~.,train_set)
+  train_matrix <- predict(dummy,train_set)
+
+  train_sparse <- Matrix(train_matrix,sparse = T)
+  dtrain <- xgb.DMatrix(data = train_sparse,label=log(outcomes))
+
+  #### xgboost params
+  param <- list(objective="reg:linear",
+              eval_metric = "rmse",
+              eta = .2,
+              gamma = 1,
+              max_depth = 4,
+              min_child_weight = 1,
+              subsample = .7,
+              colsample_bytree = .7
+  )
+
+  # CV for number of rounds
+  xgb_cv <- xgb.cv(data = dtrain,
+                  nfold = 2,
+                  params = param,
+                  nrounds = 150000,
+                  maximize = FALSE,
+                  prediction = TRUE,
+                  early.stop.round = 50,
+                  print_every_n = 50,
+                  verbose = 0
+  )
+  rounds <- xgb_cv$best_iteration  
+  
+  # Train model
+  xgb_model <- xgb.train(data = dtrain,
+                       params = param,
+                       watchlist = list(train = dtrain),
+                       nrounds = rounds,
+                       verbose = 0
+  )
+
+  imp_matrix_all <- xgb.importance(colnames(train_sparse),xgb_model)
+
+```
+
+We can see that our work payed off. There are several new features having higher importance than the basic features. 
+What we also see is that the time features (e.g., day of week) don't seem too important. 
+
+```{r, fig.height=10, width=10, echo=FALSE}
+  imp_matrix_all <- imp_matrix_all %>% mutate(group = ifelse(Feature %in% new_features,"new","old"))
+
+  ggplot(imp_matrix_all,aes(x=reorder(Feature,Gain),y=Gain, fill=group))+geom_bar(stat="identity")+coord_flip(ylim=c(0,0.2))+theme_bw()+labs(x="")
+```
+
+
+
+### Current To-do List
+
+1. Sales (by year or month) for grouped appartments.
+
+
+#### Disclaimer
+1. Not all of these features are going to help your model prediction. So choose yours wisely.
+2. For consistency, I will demonstrate all these features for the train set only, while for some features it would make sense to calculate them for the full dataset
+3. For easier readibility, I do only minimal data cleaning in this kernel. As the new features are e.g. combinations of the basic features, it would make sense to properly clean those first.
+4. While I added some features on my own, most of the features were developed by someone else. As it is not easy to figure out who had the idea first, unfortunately I cannot give you proper credt. So for all of those who shared their ideas: my gratitude goes to you. 
+
+
+
