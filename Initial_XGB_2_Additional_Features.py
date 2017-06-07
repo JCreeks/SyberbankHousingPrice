@@ -9,8 +9,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 #get_ipython().magic(u'matplotlib inline')
 from sklearn import preprocessing #model_selection, 
-from XGBoostPackage import xgbClass
-from CrossValidation import CVScore
+#from XGBoostPackage import xgbClass
+#from CrossValidation import CVScore
 from sklearn.grid_search import GridSearchCV
 
 import xgboost as xgb
