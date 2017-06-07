@@ -382,10 +382,10 @@ t0=time()
 xgbreg = xgb.XGBRegressor()
 param_grid = {
        #'n_estimators': [500],
-       'learning_rate': [.05], #[.4, .045, 0.05, .055], #
-       'max_depth': [4],#[4,5,6,7],
-       'subsample': [.7], #[.65, 0.7, .75], #
-       'colsample_bytree': [.7],#[.6, .65, 0.7, 0.75], #
+       'learning_rate': [0.05, .15, .2, .25], #[.05], #
+       'max_depth': [3, 4,5,6,7],
+       'subsample': [.65, 0.7, .75], #[.7], #
+       'colsample_bytree': [.65, 0.7, 0.75], #[.7],#
         'seed':[123]#np.arange(20)
 }
 model = GridSearchCV(estimator=xgbreg, param_grid=param_grid, n_jobs=-1, cv=5, scoring=RMSLE)
