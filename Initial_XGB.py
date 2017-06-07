@@ -343,7 +343,7 @@ param_grid = {
        'max_depth': [5],#[4,5,6,7],
        'subsample': [.7], #[.65, 0.7, .75], #
        'colsample_bytree': [.7],#[.6, .65, 0.7, 0.75], #
-        'seed':np.arange(20,21) #[123]#
+        'seed':np.arange(20,50) #[123]#
 }
 model = GridSearchCV(estimator=xgbreg, param_grid=param_grid, n_jobs=-1, cv=5, scoring=RMSLE)
 model.fit(X_train, y_train)
