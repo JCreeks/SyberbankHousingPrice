@@ -9,8 +9,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 #get_ipython().magic(u'matplotlib inline')
 from sklearn import preprocessing #model_selection, 
-from XGBoostPackage import xgbClass
-from CrossValidation import CVScore
+#from XGBoostPackage import xgbClass
+#from CrossValidation import CVScore
 from sklearn.grid_search import GridSearchCV
 
 import xgboost as xgb
@@ -343,7 +343,7 @@ param_grid = {
        'max_depth': [5],#[4,5,6,7],
        'subsample': [.7], #[.65, 0.7, .75], #
        'colsample_bytree': [.7],#[.6, .65, 0.7, 0.75], #
-        'seed':np.arange(20,50) #[123]#
+        'seed':np.arange(50,150) #[123]#
 }
 model = GridSearchCV(estimator=xgbreg, param_grid=param_grid, n_jobs=-1, cv=5, scoring=RMSLE)
 model.fit(X_train, y_train)
