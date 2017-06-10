@@ -7,10 +7,10 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-#get_ipython().magic(u'matplotlib inline')
+get_ipython().magic(u'matplotlib inline')
 from sklearn import preprocessing #model_selection, 
-#from XGBoostPackage import xgbClass
-#from CrossValidation import CVScore
+from XGBoostPackage import xgbClass
+from CrossValidation import CVScore
 from sklearn.grid_search import GridSearchCV
 
 import xgboost as xgb
@@ -336,20 +336,17 @@ column_transform(X_test)
 # In[ ]:
 
 t0=time()
-xgbreg = xgb.XGBRegressor()
+xgbreg1 = xgb.XGBRegressor(learning_rate=.1, n_estimators=140, max_depth=5, gamma=0,                           subsample=.8, colsample_bytree=.8,nthread=-1,scale_pos_weight=1)
 param_grid = {
-       #'n_estimators': [500],
-       'learning_rate': [.05], #[.4, .045, 0.05, .055], #
-       'max_depth': [5],#[4,5,6,7],
-       'subsample': [.7], #[.65, 0.7, .75], #
-       'colsample_bytree': [.7],#[.6, .65, 0.7, 0.75], #
-        'seed':np.arange(50,150) #[123]#
+       'max_depth': np.arange(3,10,2),
+       'min_child_weight': np.arange(1,6,2),
+        'seed':[5]#np.arange(20)
 }
-model = GridSearchCV(estimator=xgbreg, param_grid=param_grid, n_jobs=-1, cv=5, scoring=RMSLE)
+model = GridSearchCV(estimator=xgbreg1, param_grid=param_grid, n_jobs=-1, cv=5, scoring=RMSLE)
 model.fit(X_train, y_train)
 print('eXtreme Gradient Boosting regression...')
 print('Best Params:')
-print(model.best_params_)
+print(model.grid_scores_, model.best_params_)
 print('Best CV Score:')
 print(-model.best_score_)
 print((time()-t0)/60)
@@ -370,6 +367,12 @@ print((time()-t0)/60)
 # {'subsample': 0.75, 'learning_rate': 0.045, 'seed': 123, 'colsample_bytree': 0.75, 'max_depth': 7}
 # Best CV Score:
 # 0.464491819425
+# {'subsample': 0.7, 'learning_rate': 0.05, 'seed': 48, 'colsample_bytree': 0.7, 'max_depth': 5}
+# Best CV Score:
+# 0.469789148742
+# {'subsample': 0.7, 'learning_rate': 0.05, 'seed': 125, 'colsample_bytree': 0.7, 'max_depth': 5}
+# Best CV Score:
+# 0.469606240516
 
 
 # param_grid = {'eta':[.05], 'num_round':[500], 'subsample':[.7], 'colsample_bytree':[.7], \
