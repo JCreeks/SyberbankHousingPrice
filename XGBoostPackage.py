@@ -117,13 +117,13 @@ class xgbClass(object):
         return self.model.predict(dtest)
 
 
-def modelfit(alg, dtrain, predictors,useTrainCV=True, cv_folds=5, early_stopping_rounds=50):
+def modelfit(alg, dtrain, predictors, target, metrics, useTrainCV=True, cv_folds=5, early_stopping_rounds=50):
     
     if useTrainCV:
         xgb_param = alg.get_xgb_params()
         xgtrain = xgb.DMatrix(dtrain[predictors].values, label=dtrain[target].values)
         cvresult = xgb.cv(xgb_param, xgtrain, num_boost_round=alg.get_params()['n_estimators'], nfold=cv_folds,
-            metrics='auc', early_stopping_rounds=early_stopping_rounds, show_progress=False)
+            metrics=metrics, early_stopping_rounds=early_stopping_rounds)#, show_progress=False)
         alg.set_params(n_estimators=cvresult.shape[0])
     
     #Fit the algorithm on the data
