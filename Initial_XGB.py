@@ -7,10 +7,10 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-get_ipython().magic(u'matplotlib inline')
+#get_ipython().magic(u'matplotlib inline')
 from sklearn import preprocessing #model_selection, 
-from XGBoostPackage import xgbClass
-from CrossValidation import CVScore
+#from XGBoostPackage import xgbClass
+#from CrossValidation import CVScore
 from sklearn.grid_search import GridSearchCV
 
 import xgboost as xgb
@@ -336,7 +336,7 @@ column_transform(X_test)
 # In[ ]:
 
 t0=time()
-xgbreg1 = xgb.XGBRegressor(learning_rate=.1, n_estimators=140, max_depth=5, gamma=0,                           subsample=.8, colsample_bytree=.8,nthread=-1,scale_pos_weight=1)
+xgbreg1 = xgb.XGBRegressor(learning_rate=.1, n_estimators=140, max_depth=5, gamma=0,                           subsample=.8, colsample_bytree=.8,nthread=-1)#,scale_pos_weight=1)
 param_grid = {
        'max_depth': np.arange(3,10,2),
        'min_child_weight': np.arange(1,6,2),
