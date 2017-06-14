@@ -1,0 +1,71 @@
+ReduceVIF fit
+ReduceVIF transform
+Dropping raion_popul with vif = inf
+Dropping children_preschool with vif = inf
+Dropping children_school with vif = inf
+Dropping raion_build_count_with_material_info with vif = inf
+Dropping metro_min_walk with vif = inf
+Dropping railroad_station_walk_km with vif = inf
+Dropping public_transport_station_km with vif = inf
+Dropping cafe_count_500 with vif = inf
+Dropping cafe_count_1000 with vif = inf
+Dropping cafe_count_1500 with vif = inf
+Dropping cafe_count_2000 with vif = inf
+Dropping cafe_count_3000 with vif = inf
+Dropping cafe_count_5000 with vif = inf
+Dropping full_all with vif = 3.54614143887e+13
+Dropping work_all with vif = 6.86524333441e+12
+Dropping 16_29_all with vif = 3.50338360744e+12
+Dropping cafe_avg_price_500 with vif = 810291404709.0
+Dropping ekder_all with vif = 328538052770.0
+Dropping young_all with vif = 156052586752.0
+Dropping 0_13_all with vif = 133006486337.0
+Dropping 0_17_all with vif = 92593308333.3
+Dropping cafe_avg_price_5000 with vif = 29298565045.3
+Dropping 0_6_all with vif = 15499883421.7
+Dropping cafe_avg_price_3000 with vif = 9273964853.76
+Dropping 7_14_all with vif = 7369148156.72
+Dropping cafe_avg_price_2000 with vif = 278113067.729
+Dropping cafe_avg_price_1500 with vif = 6690552.49871
+Dropping cafe_avg_price_1000 with vif = 931011.18655
+Dropping 0_13_male with vif = 636840.154779
+Dropping young_male with vif = 435587.849351
+Dropping build_count_1946-1970 with vif = 366918.330753
+Dropping young_female with vif = 267293.891102
+Dropping kremlin_km with vif = 240415.056353
+Dropping 0_13_female with vif = 224628.993941
+Dropping bulvar_ring_km with vif = 86131.2840792
+Dropping 0_17_male with vif = 52955.9920868
+Dropping year with vif = 34367.9597336
+Dropping cafe_sum_5000_max_price_avg with vif = 23861.9535497
+Dropping 0_17_female with vif = 19398.8803074
+Dropping raion_build_count_with_builddate_info with vif = 17747.748271
+Dropping sadovoe_km with vif = 15629.7803111
+Dropping male_f with vif = 13402.444252
+Dropping cafe_sum_3000_max_price_avg with vif = 7562.73676709
+Dropping cafe_sum_1500_max_price_avg with vif = 3419.66914163
+Dropping 16_29_female with vif = 3066.0531472
+Dropping cafe_sum_2000_max_price_avg with vif = 2871.89189644
+Dropping 0_6_male with vif = 2799.61383965
+Dropping cafe_count_5000_price_1500 with vif = 2204.53392347
+Dropping build_year with vif = 2024.77941558
+Dropping cafe_count_5000_price_500 with vif = 1987.72255625
+Dropping cafe_sum_1000_max_price_avg with vif = 1653.09829086
+Dropping ekder_female with vif = 1592.12099581
+Dropping ttk_km with vif = 1514.73111
+Dropping 7_14_male with vif = 1476.53828957
+Dropping school_km with vif = 1455.62693051
+Dropping 16_29_male with vif = 1450.09334848
+Dropping cafe_count_5000_price_2500 with vif = 1324.81217712
+Dropping cafe_count_3000_price_1500 with vif = 1207.08829761
+Dropping office_count_5000 with vif = 1049.90233958
+
+length of X.columns238
+
+Index([u'full_sq', u'life_sq', u'floor', u'max_floor', u'material',
+       u'num_room', u'kitch_sq', u'state', u'product_type', u'sub_area',
+       ...
+       u'leisure_count_5000', u'sport_count_5000', u'market_count_5000',
+       u'month_year_cnt', u'week_year_cnt', u'month', u'dow', u'rel_floor',
+       u'rel_kitch_sq', u'room_size'],
+      dtype='object', length=238)
