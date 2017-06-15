@@ -1,15 +1,15 @@
 
 # coding: utf-8
 
-# In[1]:
+# In[16]:
 
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 #get_ipython().magic(u'matplotlib inline')
-from sklearn import preprocessing #model_selection, 
-#from XGBoostPackage import xgbClass
+from sklearn import preprocessing ,model_selection
+from XGBoostPackage import xgbClass, modelfit
 #from CrossValidation import CVScore
 from sklearn.grid_search import GridSearchCV
 
@@ -36,7 +36,7 @@ RMSLE = make_scorer(RMSLE_, greater_is_better=False)
 from time import time
 
 
-# In[13]:
+# In[2]:
 
 #train[['mean_price_persqm_raion','sub_area','year']][train['sub_area']=='Bibirevo']
 dict1=dict(zip(train['sub_area'],train['mean_price_persqm_raion']))
@@ -200,13 +200,13 @@ test['week_year_cnt'] = week_year.map(week_year_cnt_map)
 #     train['age_at_sale'] = (train['timestamp']-train['build_year'].apply(pd.to_datetime))/datetime.timedelta(days=365)
 
 
-# In[20]:
+# In[5]:
 
 # ((train['timestamp']-train['build_year'].apply(pd.to_datetime))/datetime.timedelta(days=365)).hist()#
 # #.apply(lambda x: x.total_seconds())
 
 
-# In[8]:
+# In[6]:
 
 # plt.figure(figsize=(12,8))
 # plt.subplot(2,2,1)
@@ -217,14 +217,14 @@ test['week_year_cnt'] = week_year.map(week_year_cnt_map)
 # plt.ylim(-.1e8,.2e8)
 
 
-# In[5]:
+# In[7]:
 
 train_lat_long=pd.read_csv("./input/train_lat_lon.csv")
 test_lat_long=pd.read_csv("./input/test_lat_lon.csv")
-#train_lat_long.head()
+# train_lat_long.head()
 
 
-# In[6]:
+# In[8]:
 
 train=train.merge(train_lat_long[["id","lat","lon"]],left_on='id',right_on='id')
 del train_lat_long
@@ -233,18 +233,18 @@ del test_lat_long
 train.loc[train['id']==11054]
 
 
-# In[7]:
+# In[9]:
 
 # train.head()
 
 
-# In[8]:
+# In[10]:
 
 # sns.lmplot(x="lon",y="lat",scatter_kws={'alpha':.4,'s':30}, size=9, fit_reg=False, data=train)
 # axes=plt.gca()
 
 
-# In[9]:
+# In[11]:
 
 import math
 def cart2rho(x, y):
@@ -298,17 +298,17 @@ def operate_on_coordinates(tr_df, te_df):
 train, test= operate_on_coordinates(train, test)
 
 
-# In[10]:
+# In[12]:
 
 # sns.regplot(data=train.sample(1000),x="dist_to_center",y="price_doc")
 
 
-# In[11]:
+# In[13]:
 
 # train['full_sq'].hist(bins=100, figsize=(12,8))
 
 
-# In[13]:
+# In[14]:
 
 # y_train = train["price_doc"]
 # X_train = train.drop(["id", "timestamp", "price_doc"], axis=1)
@@ -342,31 +342,196 @@ column_transform(X_train)
 column_transform(X_test)
 
 
+# In[19]:
+
+X_train.shape
+
+
+# In[19]:
+
+t0=time()
+xgbreg = xgb.XGBRegressor(learning_rate=.1, n_estimators=150, max_depth=6, gamma=0,                           min_child_weight=3, seed=123, reg_alpha=1e7,                          subsample=.95, colsample_bytree=.95,nthread=-1,scale_pos_weight=1)
+modelfit(xgbreg, X_train, y_train)
+xgb.cv()
+
+
+# In[17]:
+
+t0=time()
+xgbreg1 = xgb.XGBRegressor(learning_rate=.1, n_estimators=140, max_depth=5, gamma=0,                           subsample=.8, colsample_bytree=.8,nthread=-1,scale_pos_weight=1)
+param_grid = {
+       'max_depth': np.arange(3,10,2),
+       'min_child_weight': np.arange(1,6,2),
+        'seed':[123]#np.arange(20)
+}
+model = GridSearchCV(estimator=xgbreg1, param_grid=param_grid, n_jobs=-1, cv=5, scoring=RMSLE)
+model.fit(X_train, y_train)
+print('eXtreme Gradient Boosting regression...')
+print('Best Params:')
+print(model.grid_scores_, model.best_params_)
+print('Best CV Score:')
+print(-model.best_score_)
+print((time()-t0)/60)
+
+
+# In[18]:
+
+t0=time()
+xgbreg2 = xgb.XGBRegressor(learning_rate=.1, n_estimators=140, max_depth=5, gamma=0,                           subsample=.8, colsample_bytree=.8,nthread=-1,scale_pos_weight=1)
+param_grid = {
+       'max_depth': [6,7,8],
+       'min_child_weight': [2,3,4],
+        'seed':[123]#np.arange(20)
+}
+model = GridSearchCV(estimator=xgbreg2, param_grid=param_grid, n_jobs=-1, cv=5, scoring=RMSLE)
+model.fit(X_train, y_train)
+print('eXtreme Gradient Boosting regression...')
+print('Best Params:')
+print(model.grid_scores_, model.best_params_)
+print('Best CV Score:')
+print(-model.best_score_)
+print((time()-t0)/60)
+
+
+# In[20]:
+
+t0=time()
+xgbreg3 = xgb.XGBRegressor(learning_rate=.1, n_estimators=140, max_depth=5, gamma=0,                           subsample=.8, colsample_bytree=.8,nthread=-1,scale_pos_weight=1)
+param_grid = {
+       'gamma' : [i/10.0 for i in np.arange(0,5)],
+       'max_depth': [6],
+       'min_child_weight': [3],
+        'seed':[123]#np.arange(20)
+}
+model = GridSearchCV(estimator=xgbreg3, param_grid=param_grid, n_jobs=-1, cv=5, scoring=RMSLE)
+model.fit(X_train, y_train)
+print('eXtreme Gradient Boosting regression...')
+print('Best Params:')
+print(model.grid_scores_, model.best_params_)
+print('Best CV Score:')
+print(-model.best_score_)
+print((time()-t0)/60)
+
+
+# In[24]:
+
+t0=time()
+xgbreg4 = xgb.XGBRegressor(learning_rate=.1, n_estimators=150, max_depth=6, gamma=0,                           min_child_weight=3, seed=123,                           subsample=.8, colsample_bytree=.8,nthread=-1,scale_pos_weight=1)
+param_grid = {
+    'subsample':[i/10.0 for i in np.arange(6,10)],
+    'colsample_bytree':[i/10.0 for i in np.arange(6,10)]
+       #'gamma' : [0],
+       #'max_depth': [6],
+       #'min_child_weight': [3],
+        #'seed':[123]#np.arange(20)
+}
+model = GridSearchCV(estimator=xgbreg4, param_grid=param_grid, n_jobs=-1, cv=5, scoring=RMSLE)
+model.fit(X_train, y_train)
+print('eXtreme Gradient Boosting regression...')
+print('Best Params:')
+print(model.grid_scores_, model.best_params_)
+print('Best CV Score:')
+print(-model.best_score_)
+print((time()-t0)/60)
+
+
+# In[26]:
+
+t0=time()
+xgbreg5 = xgb.XGBRegressor(learning_rate=.1, n_estimators=150, max_depth=6, gamma=0,                           min_child_weight=3, seed=123,                           subsample=.8, colsample_bytree=.8,nthread=-1,scale_pos_weight=1)
+param_grid = {
+    'subsample':[i/100.0 for i in np.arange(85,100,5)],
+    'colsample_bytree':[i/100.0 for i in np.arange(85,100,5)]
+       #'gamma' : [0],
+       #'max_depth': [6],
+       #'min_child_weight': [3],
+        #'seed':[123]#np.arange(20)
+}
+model = GridSearchCV(estimator=xgbreg5, param_grid=param_grid, n_jobs=-1, cv=5, scoring=RMSLE)
+model.fit(X_train, y_train)
+print('eXtreme Gradient Boosting regression...')
+print('Best Params:')
+print(model.grid_scores_, model.best_params_)
+print('Best CV Score:')
+print(-model.best_score_)
+print((time()-t0)/60)
+
+
 # In[15]:
 
-# xgb_params = {
-#     'eta': 0.2,
-#     'max_depth': 4,
-#     'subsample': 0.7,
-#     'colsample_bytree': 0.7,
-#     'objective': 'reg:linear',
-#     'eval_metric': 'rmse',
-#     'silent': 1,
-#     'booster' :'gbtree',
-#     'tuneLength': 3,
-#     'seed': 123
-# }
-# num_rounds=400
+#del xgbreg
+t0=time()
+xgbreg6 = xgb.XGBRegressor(learning_rate=.1, n_estimators=150, max_depth=6, gamma=0,                           min_child_weight=3, seed=123, reg_alpha=0,                          subsample=.95, colsample_bytree=.95,nthread=-1,scale_pos_weight=1)
+param_grid = {
+    'reg_alpha':[1e4,1e5,1e6,1e7]#[1e-5, 1e-2, .1, 1, 100]
+    #'subsample':[i/100.0 for i in np.arange(85,100,5)],
+    #'colsample_bytree':[i/100.0 for i in np.arange(85,100,5)]
+       #'gamma' : [0],
+       #'max_depth': [6],
+       #'min_child_weight': [3],
+        #'seed':[123]#np.arange(20)
+}
+model = GridSearchCV(estimator=xgbreg6, param_grid=param_grid, n_jobs=-1, cv=5, scoring=RMSLE)
+model.fit(X_train, y_train)
+print('eXtreme Gradient Boosting regression...')
+print('Best Params:')
+print(model.grid_scores_, model.best_params_)
+print('Best CV Score:')
+print(-model.best_score_)
+print((time()-t0)/60)
 
-# X_fit, X_val, y_fit, y_val=train_test_split(X_train[:], y_train[:], test_size=0.2, random_state=123)
-# xgfit = xgb.DMatrix(X_fit, label=y_fit)
-# xgval = xgb.DMatrix(X_val, label=y_val)
-# watchlist = [ (xgfit,'train'), (xgval, 'test') ]
-# clfCV = xgb.train(xgb_params, xgfit, num_rounds)
-# #clfCV = xgb.train(xgb_params, xgfit, num_rounds, watchlist, early_stopping_rounds=20)
 
-# y_val_pred = clfCV.predict(xgval)
-# RMSLE_(y_val,y_val_pred)
+# In[17]:
+
+#del xgbreg
+t0=time()
+xgbreg6 = xgb.XGBRegressor(learning_rate=.1, n_estimators=150, max_depth=6, gamma=0,                           min_child_weight=3, seed=123, reg_alpha=0,                          subsample=.95, colsample_bytree=.95,nthread=-1,scale_pos_weight=1)
+param_grid = {
+    'reg_alpha':[8e6,1e7, 1.5e7]#[1e-5, 1e-2, .1, 1, 100]
+    #'subsample':[i/100.0 for i in np.arange(85,100,5)],
+    #'colsample_bytree':[i/100.0 for i in np.arange(85,100,5)]
+       #'gamma' : [0],
+       #'max_depth': [6],
+       #'min_child_weight': [3],
+        #'seed':[123]#np.arange(20)
+}
+model = GridSearchCV(estimator=xgbreg6, param_grid=param_grid, n_jobs=-1, cv=5, scoring=RMSLE)
+model.fit(X_train, y_train)
+print('eXtreme Gradient Boosting regression...')
+print('Best Params:')
+print(model.grid_scores_, model.best_params_)
+print('Best CV Score:')
+print(-model.best_score_)
+print((time()-t0)/60)
+
+
+# In[15]:
+
+xgb_params = {
+    'eta': 0.02,
+    'max_depth': 6,
+    'subsample': 0.95,
+    'reg_alpha': 1e7,
+    'min_child_weight':3,
+    'colsample_bytree': 0.95,
+    'objective': 'reg:linear',
+    'eval_metric': 'rmse',
+    'silent': 1,
+    'booster' :'gbtree',
+    'tuneLength': 3,
+    'seed': 123
+}
+num_rounds=2000
+
+X_fit, X_val, y_fit, y_val=train_test_split(X_train[:], y_train[:], test_size=0.2,                                             random_state=123)
+xgfit = xgb.DMatrix(X_fit, label=y_fit)
+xgval = xgb.DMatrix(X_val, label=y_val)
+watchlist = [ (xgfit,'train'), (xgval, 'test') ]
+#clfCV = xgb.train(xgb_params, xgfit, num_rounds)
+clfCV = xgb.train(xgb_params, xgfit, num_rounds, watchlist, early_stopping_rounds=20)
+
+y_val_pred = clfCV.predict(xgval)
+RMSLE_(y_val,y_val_pred)
 # {'subsample': 0.7, 'learning_rate': 0.05, 'seed': 5, 'colsample_bytree': 0.7, 'max_depth': 5} 0.44153281251502002
 # {'subsample': 0.7, 'learning_rate': 0.05, 'seed': 5, 'colsample_bytree': 0.7, 'max_depth': 5} #year 
 #0.44060260149809333
@@ -374,45 +539,78 @@ column_transform(X_test)
 # 0.44209231186019138
 # 'eta': 0.2, 'max_depth': 4,'subsample': 0.7,'colsample_bytree': 0.7,'objective': 'reg:linear','eval_metric': 'rmse',
 #'silent': 1,'booster' :'gbtree','tuneLength': 3,'seed': 123, 0.44795306064489548
+# 'eta': 0.05, 'max_depth': 7,'subsample': 0.7,'colsample_bytree': 0.7,'objective': 'reg:linear','eval_metric': 'rmse',
+#'silent': 1,'booster' :'gbtree','tuneLength': 3,'seed': 5, 0.43906751173727021
+# 'eta': 0.05, 'max_depth': 7,'subsample': 0.7,'colsample_bytree': 0.7,'objective': 'reg:linear','eval_metric': 'rmse',
+#'silent': 1,'booster' :'gbtree','tuneLength': 3,'seed': 123, 0.43867312921244639
+
+#'eta': 0.1,'max_depth': 6,'subsample': 0.95,'min_child_weight':3,'colsample_bytree': 0.95,
+#'objective': 'reg:linear','eval_metric': 'rmse','silent': 1,'booster' :'gbtree',
+#'tuneLength': 3,'seed': 123, 0.44006308323535842
+
+#'eta': 0.05,'max_depth': 6,'subsample': 0.95,'min_child_weight':3,'colsample_bytree': 0.95,
+#'objective': 'reg:linear','eval_metric': 'rmse','silent': 1,'booster' :'gbtree',
+#'tuneLength': 3,'seed': 123, 0.43956845066724409
+
+#'eta': 0.01,'max_depth': 6,'subsample': 0.95,'min_child_weight':3,'colsample_bytree': 0.95,
+#'objective': 'reg:linear','eval_metric': 'rmse','silent': 1,'booster' :'gbtree',
+#'tuneLength': 3,'seed': 123, 0.44026780405377181
+
+#'eta': 0.1,'max_depth': 6,'subsample': 0.95,'min_child_weight':3,'colsample_bytree': 0.95,
+#'objective': 'reg:linear','eval_metric': 'rmse','silent': 1,'booster' :'gbtree', 'reg_alpha': 1e7,
+#'tuneLength': 3,'seed': 123, 0.44012755182473617
+
+#'eta': 0.05,'max_depth': 6,'subsample': 0.95,'min_child_weight':3,'colsample_bytree': 0.95,
+#'objective': 'reg:linear','eval_metric': 'rmse','silent': 1,'booster' :'gbtree', 'reg_alpha': 1e7,
+#'tuneLength': 3,'seed': 123, 0.43836880534269967
+
+#'eta': 0.02,'max_depth': 6,'subsample': 0.95,'min_child_weight':3,'colsample_bytree': 0.95,
+#'objective': 'reg:linear','eval_metric': 'rmse','silent': 1,'booster' :'gbtree', 'reg_alpha': 1e7,
+#'tuneLength': 3,'seed': 123, 0.43755608914917643
 
 
-# In[12]:
+# In[16]:
 
-t0=time()
-xgbreg = xgb.XGBRegressor()
-param_grid = {
-       #'n_estimators': [500],
-       'learning_rate': [0.05, .15, .2, .25], #[.05], #
-       'max_depth': [3, 4,5,6,7],
-       'subsample': [.65, 0.7, .75], #[.7], #
-       'colsample_bytree': [.65, 0.7, 0.75], #[.7],#
-        'seed':[123]#np.arange(20)
-}
-model = GridSearchCV(estimator=xgbreg, param_grid=param_grid, n_jobs=-1, cv=5, scoring=RMSLE)
-model.fit(X_train, y_train)
-print('eXtreme Gradient Boosting regression...')
-print('Best Params:')
-print(model.best_params_)
-print('Best CV Score:')
-print(-model.best_score_)
-print((time()-t0)/60)
+# t0=time()
+# xgbreg = xgb.XGBRegressor()
+# param_grid = {
+#        #'n_estimators': [500],
+#        'learning_rate': [0.05, .15, .2, .25], #[.05], #
+#        'max_depth': [3, 4,5,6,7],
+#        'subsample': [.65, 0.7, .75], #[.7], #
+#        'colsample_bytree': [.65, 0.7, 0.75], #[.7],#
+#         'seed':[123]#np.arange(20)
+# }
+# model = GridSearchCV(estimator=xgbreg, param_grid=param_grid, n_jobs=-1, cv=5, scoring=RMSLE)
+# model.fit(X_train, y_train)
+# print('eXtreme Gradient Boosting regression...')
+# print('Best Params:')
+# print(model.best_params_)
+# print('Best CV Score:')
+# print(-model.best_score_)
+# print((time()-t0)/60)
 
 
 
-# eXtreme Gradient Boosting regression...
-# Best Params:
-# {'subsample': 0.7, 'learning_rate': 0.05, 'seed': 5, 'colsample_bytree': 0.7, 'max_depth': 5}
-# Best CV Score:
-# 0.468277454751
-##################
-# eXtreme Gradient Boosting regression...
-# Best Params:
-# {'subsample': 0.7, 'learning_rate': 0.045, 'seed': 123, 'colsample_bytree': 0.65, 'max_depth': 6}
-# Best CV Score:
-# 0.466023945905
-# {'subsample': 0.75, 'learning_rate': 0.045, 'seed': 123, 'colsample_bytree': 0.75, 'max_depth': 7}
-# Best CV Score:
-# 0.464491819425
+
+# # eXtreme Gradient Boosting regression...
+# # Best Params:
+# # {'subsample': 0.7, 'learning_rate': 0.05, 'seed': 5, 'colsample_bytree': 0.7, 'max_depth': 5}
+# # Best CV Score:
+# # 0.468277454751
+# ##################
+# # eXtreme Gradient Boosting regression...
+# # Best Params:
+# # {'subsample': 0.7, 'learning_rate': 0.045, 'seed': 123, 'colsample_bytree': 0.65, 'max_depth': 6}
+# # Best CV Score:
+# # 0.466023945905
+# # {'subsample': 0.75, 'learning_rate': 0.045, 'seed': 123, 'colsample_bytree': 0.75, 'max_depth': 7}
+# # Best CV Score:
+# # 0.464491819425
+# # Best Params:
+# # {'subsample': 0.7, 'learning_rate': 0.05, 'seed': 123, 'colsample_bytree': 0.7, 'max_depth': 7}
+# # Best CV Score:
+# # 0.460651355555
 
 
 # param_grid = {'eta':[.05], 'num_round':[500], 'subsample':[.7], 'colsample_bytree':[.7], \
@@ -435,50 +633,70 @@ print((time()-t0)/60)
 
 # In[15]:
 
-# xgb_params = {
-#     'eta': 0.045,
-#     'max_depth': 7,
-#     'subsample': 0.75,
-#     'colsample_bytree': 0.75,
-#     'objective': 'reg:linear',
-#     'eval_metric': 'rmse',
-#     'silent': 1,
-#     'booster' :'gbtree',
-#     'tuneLength': 3,
-#     'seed': 123
-# }
+xgb_params = {
+    'eta': 0.02,
+    'max_depth': 6,
+    'subsample': 0.95,
+    'reg_alpha': 1e7,
+    'min_child_weight':3,
+    'colsample_bytree': 0.95,
+    'objective': 'reg:linear',
+    'eval_metric': 'rmse',
+    'silent': 1,
+    'booster' :'gbtree',
+    'tuneLength': 3,
+    'seed': 123
+}
 
-# dtrain = xgb.DMatrix(X_train, y_train)
-# dtest = xgb.DMatrix(X_test)
+dtrain = xgb.DMatrix(X_train, y_train)
+dtest = xgb.DMatrix(X_test)
 
-# cv_output = xgb.cv(xgb_params, dtrain, num_boost_round=1000, early_stopping_rounds=20,
-#     verbose_eval=50, show_stdv=False)
-# cv_output[['train-rmse-mean', 'test-rmse-mean']].plot()
-
-
-# In[16]:
-
-# num_boost_rounds = len(cv_output)
-# model = xgb.train(dict(xgb_params, silent=0), dtrain, num_boost_round=num_boost_rounds)
-
-# #fig, ax = plt.subplots(1, 1, figsize=(8, 13))
-# #xgb.plot_importance(model, max_num_features=50, height=0.5, ax=ax)
-
-# y_predict = model.predict(dtest)
-# #y_predict = np.round(y_predict)#np.round(y_predict * 0.99)
-# output = pd.DataFrame({'id': id_test, 'price_doc': y_predict})
-
+cv_output = xgb.cv(xgb_params, dtrain, num_boost_round=2000, #early_stopping_rounds=20,\
+    verbose_eval=50, show_stdv=False)
+cv_output[['train-rmse-mean', 'test-rmse-mean']].plot()
 
 
 # In[17]:
 
-# fig, ax = plt.subplots(1, 1, figsize=(8, 13))
-# xgb.plot_importance(model, max_num_features=50, height=0.5, ax=ax)
+xgb_params = {
+    'eta': 0.02,
+    'max_depth': 6,
+    'subsample': 0.95,
+    'reg_alpha': 1e7,
+    'min_child_weight':3,
+    'colsample_bytree': 0.95,
+    'objective': 'reg:linear',
+    'eval_metric': 'rmse',
+    'silent': 1,
+    'booster' :'gbtree',
+    'tuneLength': 3,
+    'seed': 48
+}
+
+dtrain = xgb.DMatrix(X_train, y_train)
+dtest = xgb.DMatrix(X_test)
+
+num_boost_rounds = 250#len(cv_output)
+model = xgb.train(dict(xgb_params, silent=0), dtrain, num_boost_round=num_boost_rounds)
+
+#fig, ax = plt.subplots(1, 1, figsize=(8, 13))
+#xgb.plot_importance(model, max_num_features=50, height=0.5, ax=ax)
+
+y_predict = model.predict(dtest)
+#y_predict = np.round(y_predict)#np.round(y_predict * 0.99)
+output = pd.DataFrame({'id': id_test, 'price_doc': y_predict})
+
 
 
 # In[18]:
 
-# output.to_csv('submission_Jun4_1_withID.csv', index=False)
+fig, ax = plt.subplots(1, 1, figsize=(8, 13))
+xgb.plot_importance(model, max_num_features=50, height=0.5, ax=ax)
+
+
+# In[ ]:
+
+output.to_csv('submission_Jun9_3_seed48_Additional_Feature.csv', index=False)
 
 
 # In[ ]:
