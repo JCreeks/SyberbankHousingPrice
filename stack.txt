@@ -16,3 +16,97 @@ Best estimator:
 Ridge(alpha=0.001, copy_X=True, fit_intercept=True, max_iter=None,
    normalize=False, random_state=None, solver='auto', tol=0.001)
 ('Creating submission: ', 'submission_0.44890074651_2017-06-18-07-58.csv')
+
+Fitting the base model...
+Fitting the base model...
+Fitting the base model...
+Stacking base models...
+Param grid:
+{'alpha': [0.001, 0.005, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.8, 1.0, 3, 5, 7, 10.0]}
+Best Params:
+{'alpha': 0.001}
+Best CV Score:
+0.449093520523
+Best estimator:
+Ridge(alpha=0.001, copy_X=True, fit_intercept=True, max_iter=None,
+   normalize=False, random_state=None, solver='auto', tol=0.001)
+('Creating submission: ', 'submission_0.449093520523_2017-06-18-16-23skewAdded.csv')/home/ubuntu/anaconda2/lib/python2.7/site-packages/sklearn/cross_validation.py:44: DeprecationWarning: This module was deprecated in version 0.18 in favor of the model_selection module into which all the refactored classes and functions are moved. Also note that the interface of the new CV iterators are different from that of this module. This module will be removed in 0.20.
+  "This module will be removed in 0.20.", DeprecationWarning)
+/home/ubuntu/anaconda2/lib/python2.7/site-packages/sklearn/grid_search.py:43: DeprecationWarning: This module was deprecated in version 0.18 in favor of the model_selection module into which all the refactored classes and functions are moved. This module will be removed in 0.20.
+  DeprecationWarning)
+/home/ubuntu/anaconda2/lib/python2.7/site-packages/scipy/stats/stats.py:926: RuntimeWarning: invalid value encountered in subtract
+  a_zero_mean = a - np.expand_dims(np.mean(a, axis), axis)
+Fitting the base model...
+Fitting the base model...
+Fitting the base model...
+Stacking base models...
+Param grid:
+{'alpha': [0.001, 0.005, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.8, 1.0, 3, 5, 7, 10.0]}
+Best Params:
+{'alpha': 0.001}
+Best CV Score:
+0.44906869721
+Best estimator:
+Ridge(alpha=0.001, copy_X=True, fit_intercept=True, max_iter=None,
+   normalize=False, random_state=None, solver='auto', tol=0.001)
+('Creating submission: ', 'submission_0.44906869721_2017-06-18-17-47skewAdded2.csv')
+/home/ubuntu/anaconda2/lib/python2.7/site-packages/sklearn/cross_validation.py:44: DeprecationWarning: This module was deprecated in version 0.18 in favor of the model_selection module into which all the refactored classes and functions are moved. Also note that the interface of the new CV iterators are different from that of this module. This module will be removed in 0.20.
+  "This module will be removed in 0.20.", DeprecationWarning)
+/home/ubuntu/anaconda2/lib/python2.7/site-packages/sklearn/grid_search.py:43: DeprecationWarning: This module was deprecated in version 0.18 in favor of the model_selection module into which all the refactored classes and functions are moved. This module will be removed in 0.20.
+  DeprecationWarning)
+/home/ubuntu/anaconda2/lib/python2.7/site-packages/scipy/stats/stats.py:926: RuntimeWarning: invalid value encountered in subtract
+  a_zero_mean = a - np.expand_dims(np.mean(a, axis), axis)
+/home/ubuntu/anaconda2/lib/python2.7/site-packages/sklearn/linear_model/coordinate_descent.py:484: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations. Fitting data with very small alpha may cause precision problems.
+  ConvergenceWarning)
+/home/ubuntu/anaconda2/lib/python2.7/site-packages/sklearn/linear_model/least_angle.py:334: ConvergenceWarning: Early stopping the lars path, as the residues are small and the current value of alpha is no longer well controlled. 273 iterations, alpha=1.694e-05, previous alpha=2.272e-06, with an active set of 210 regressors.
+  ConvergenceWarning)
+/home/ubuntu/anaconda2/lib/python2.7/site-packages/sklearn/linear_model/least_angle.py:334: ConvergenceWarning: Early stopping the lars path, as the residues are small and the current value of alpha is no longer well controlled. 268 iterations, alpha=1.845e-05, previous alpha=2.343e-06, with an active set of 207 regressors.
+  ConvergenceWarning)
+/home/ubuntu/anaconda2/lib/python2.7/site-packages/sklearn/linear_model/least_angle.py:334: ConvergenceWarning: Early stopping the lars path, as the residues are small and the current value of alpha is no longer well controlled. 294 iterations, alpha=3.605e-05, previous alpha=1.639e-06, with an active set of 225 regressors.
+  ConvergenceWarning)
+/home/ubuntu/anaconda2/lib/python2.7/site-packages/sklearn/linear_model/least_angle.py:334: ConvergenceWarning: Early stopping the lars path, as the residues are small and the current value of alpha is no longer well controlled. 264 iterations, alpha=1.836e-05, previous alpha=2.048e-06, with an active set of 205 regressors.
+  ConvergenceWarning)
+/home/ubuntu/anaconda2/lib/python2.7/site-packages/sklearn/linear_model/least_angle.py:334: ConvergenceWarning: Early stopping the lars path, as the residues are small and the current value of alpha is no longer well controlled. 299 iterations, alpha=3.484e-05, previous alpha=6.360e-07, with an active set of 240 regressors.
+  ConvergenceWarning)
+/home/ubuntu/anaconda2/lib/python2.7/site-packages/sklearn/linear_model/least_angle.py:334: ConvergenceWarning: Early stopping the lars path, as the residues are small and the current value of alpha is no longer well controlled. 280 iterations, alpha=1.889e-05, previous alpha=2.284e-06, with an active set of 211 regressors.
+  ConvergenceWarning)
+/home/ubuntu/anaconda2/lib/python2.7/site-packages/sklearn/linear_model/least_angle.py:334: ConvergenceWarning: Early stopping the lars path, as the residues are small and the current value of alpha is no longer well controlled. 296 iterations, alpha=1.773e-05, previous alpha=1.726e-06, with an active set of 221 regressors.
+  ConvergenceWarning)
+/home/ubuntu/anaconda2/lib/python2.7/site-packages/sklearn/linear_model/least_angle.py:334: ConvergenceWarning: Early stopping the lars path, as the residues are small and the current value of alpha is no longer well controlled. 288 iterations, alpha=1.271e-05, previous alpha=1.201e-06, with an active set of 223 regressors.
+  ConvergenceWarning)
+/home/ubuntu/anaconda2/lib/python2.7/site-packages/sklearn/linear_model/least_angle.py:334: ConvergenceWarning: Early stopping the lars path, as the residues are small and the current value of alpha is no longer well controlled. 272 iterations, alpha=3.613e-06, previous alpha=2.499e-06, with an active set of 209 regressors.
+  ConvergenceWarning)
+/home/ubuntu/anaconda2/lib/python2.7/site-packages/sklearn/linear_model/least_angle.py:334: ConvergenceWarning: Early stopping the lars path, as the residues are small and the current value of alpha is no longer well controlled. 282 iterations, alpha=1.170e-06, previous alpha=1.166e-06, with an active set of 221 regressors.
+  ConvergenceWarning)
+/home/ubuntu/anaconda2/lib/python2.7/site-packages/sklearn/linear_model/least_angle.py:334: ConvergenceWarning: Early stopping the lars path, as the residues are small and the current value of alpha is no longer well controlled. 293 iterations, alpha=1.200e-06, previous alpha=1.178e-06, with an active set of 222 regressors.
+  ConvergenceWarning)
+/home/ubuntu/anaconda2/lib/python2.7/site-packages/sklearn/linear_model/least_angle.py:334: ConvergenceWarning: Early stopping the lars path, as the residues are small and the current value of alpha is no longer well controlled. 279 iterations, alpha=1.116e-05, previous alpha=2.350e-06, with an active set of 218 regressors.
+  ConvergenceWarning)
+/home/ubuntu/anaconda2/lib/python2.7/site-packages/sklearn/linear_model/least_angle.py:334: ConvergenceWarning: Early stopping the lars path, as the residues are small and the current value of alpha is no longer well controlled. 272 iterations, alpha=2.412e-04, previous alpha=2.614e-06, with an active set of 207 regressors.
+  ConvergenceWarning)
+/home/ubuntu/anaconda2/lib/python2.7/site-packages/sklearn/linear_model/least_angle.py:334: ConvergenceWarning: Early stopping the lars path, as the residues are small and the current value of alpha is no longer well controlled. 290 iterations, alpha=1.967e-06, previous alpha=1.849e-06, with an active set of 215 regressors.
+  ConvergenceWarning)
+/home/ubuntu/anaconda2/lib/python2.7/site-packages/sklearn/linear_model/least_angle.py:334: ConvergenceWarning: Early stopping the lars path, as the residues are small and the current value of alpha is no longer well controlled. 265 iterations, alpha=2.190e-05, previous alpha=2.596e-06, with an active set of 204 regressors.
+  ConvergenceWarning)
+Fitting the base model...
+Fitting the base model...
+Fitting the base model...
+Fitting the base model...
+Fitting the base model...
+Fitting the base model...
+Fitting the base model...
+Fitting the base model...
+Fitting the base model...
+Fitting the base model...
+Fitting the base model...
+Stacking base models...
+Param grid:
+{'alpha': [0.001, 0.005, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.8, 1.0, 3, 5, 7, 10.0]}
+Best Params:
+{'alpha': 0.001}
+Best CV Score:
+0.448540912156
+Best estimator:
+Ridge(alpha=0.001, copy_X=True, fit_intercept=True, max_iter=None,
+   normalize=False, random_state=None, solver='auto', tol=0.001)
+('Creating submission: ', 'submission_0.448540912156_2017-06-18-20-09skewAdded2_moreReg.csv')
