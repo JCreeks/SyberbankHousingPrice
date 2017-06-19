@@ -1,0 +1,497 @@
+---
+title: "Cleaning the data using Lat and Longitude"
+author: "Nigel Carpenter"
+date: "May, 2017"
+output: 
+  html_document: 
+    code_folding: "show"
+    highlight: haddock
+    theme: readable
+    fig_width: 9
+    fig_height: 6
+---
+# Introduction
+
+In my earlier kernels I illustrated an approach to identify a property's location and code to extract latitude and longitude for all locations
+(https://www.kaggle.com/nigelcarpenter/lat-and-longitude-for-all-locations).
+
+I now take that further and provide code that shows how the lat lon location data can be used to apply a degree of automated and intelligent cleansing of this dataset.
+
+Once again I ask that if you find this useful that you please give it an upvote. 
+
+# Libraries and Data
+
+## Libraries
+```{r package loading, message=FALSE, warning=FALSE}
+
+# == General == #
+library(data.table) # read data with fread()
+library(DT)         # display interactive tables
+library(xgboost)    # create GBM models
+
+# == Spatial == #
+library(rgdal)
+library(rgeos)
+library(sp)
+library(raster)
+library(spatstat) # fast nearest neighbour
+library(maptools) # coercion spdf to ppp
+
+
+```
+## Data
+
+The focus of this script will be on cleansing the property details data. There are a lot of NA's and spurious 0, 1, 99 values that common sense says cannot be correct. My hope is that by removing and correcting this the accuracy of predictions will be improved.
+
+So let's start by reading in the property related factors, the latitudes and longitudes and creating a summary feature counting the number of properties at the location.
+
+```{r, message=FALSE, warning=FALSE}
+
+
+lst_property_features <- c("id", "timestamp", "full_sq", "life_sq", "floor",                                
+                           "max_floor", "material", "build_year", "num_room", "kitch_sq",                             
+                           "state", "product_type", "sub_area")
+
+# Load CSV files
+data.train <- fread("../input/sberbank-russian-housing-market/train.csv", sep=",", na.strings = "NA", select = c(lst_property_features, "price_doc"))
+data.test <- fread("../input/sberbank-russian-housing-market/test.csv", sep=",", na.strings = "NA", select = lst_property_features)
+
+data.train[, train := 1]
+data.train[, timestamp := as.Date(timestamp,"%d/%m/%Y")]
+
+data.test[, train := 0]
+data.test[, timestamp := as.Date(timestamp,"%Y-%m-%d")]
+data.test[, price_doc := 0]
+
+# Load location lat lon files
+data.train.latlon <- fread("../input/sberbankmoscowroads/train_lat_lon.csv", sep=",", na.strings = "NA")
+data.test.latlon <- fread("../input/sberbankmoscowroads/test_lat_lon.csv", sep=",", na.strings = "NA")
+
+# Combine data.tables
+data.all <- rbind(data.train, data.test)
+data.latlon <- rbind(data.train.latlon, data.test.latlon)
+
+setkey(data.all, id)
+setkey(data.latlon, id)
+
+data.all <- data.all[data.latlon]
+
+# tidy up
+rm(data.train, data.test, data.train.latlon, data.test.latlon)
+
+# features
+
+
+# 1 how many poperties at this location
+data.latlon.sum <- data.latlon[,.(count = .N, lat = mean(lat), lon= mean(lon)) , by=key]
+setkey(data.latlon.sum, key)
+
+data.latlon.sum[, key_id := 1:nrow(data.latlon.sum)]
+
+setkey(data.latlon, key)
+setkey(data.all, key)
+
+data.latlon <- data.latlon[data.latlon.sum]
+data.all <- data.all[data.latlon.sum[, -c("lat", "lon"), with = FALSE]]
+
+```
+# Simple anomalies
+
+## Cleaning Max_Floor
+
+The data has a large number of properties with max_floor that would be considered extreme. 
+
+```{r, message=FALSE, warning=FALSE}
+data.all[, max_floor_orig := max_floor]
+summary(data.all$max_floor_orig)
+
+hist(data.all$max_floor_orig, breaks =117)
+
+
+```
+
+The tallest apartment block in Moscow is Triumph-Palace with 57 floors https://en.wikipedia.org/wiki/Triumph_Palace.
+It is also very unlikely for there to be properties with 1 or fewer floors in highrise Moscow.
+
+
+```{r, message=FALSE, warning=FALSE}
+
+# set any rows > 57 to NA
+data.all[max_floor_orig > 57, max_floor := NA]
+
+# max_floor = 0 has to mean not known so set to NA
+data.all[max_floor_orig ==0, max_floor := NA]
+
+# max_floor = 1 is unlikely in high rise Moscow
+data.all[floor>1 & max_floor_orig ==1, max_floor := NA]
+
+```
+
+Further, properties where the actual floor is greater than the max_floor must be an error.
+It's not clear if the error is in the max_floor or floor field so we will mark these rows with an error flag.
+
+```{r, message=FALSE, warning=FALSE}
+
+# now what about properties where floor > max_floor
+datatable(data.all[floor> max_floor, -"key", with = FALSE], rownames = FALSE, style="bootstrap", class="table-condensed", options = list(dom = 'tp',scrollX = TRUE))
+
+# interesting lots of impossibles and 1 seems to be a not-known flag
+
+# lets create an error flag so we can remove them for now
+data.all[, err_flag := 0]
+data.all[floor> max_floor | is.na(max_floor) , err_flag := 1]
+
+data.all[floor==1 &  max_floor ==1 & build_year==1 & full_sq==1, err_flag := 1]
+
+```
+
+The summary and histogram after this simple cleansing already look more sensible.
+
+```{r, message=FALSE, warning=FALSE}
+
+summary(data.all[err_flag == 0, max_floor])
+hist(data.all[err_flag == 0, max_floor], breaks =117)
+
+```
+
+## Cleaning build_year
+
+The data has a number of properties spurious values of build_year. Anything prior to 1900 is worthy of investigation. 0 an 1 are obvious errors and could be set to NA.
+
+This link would suggest that the 1691 property is an error... http://students.sras.org/moscows-seven-oldest-buildings/ 
+
+```{r, message=FALSE, warning=FALSE}
+data.all[, build_year_orig := build_year]
+summary(data.all$build_year_orig)
+table(data.all$build_year_orig)
+
+```
+
+Lets have a look at a few of those extreme values to see what we can find. Starting with 1691...
+
+What are the details for all properties at that location?
+
+```{r, message=FALSE, warning=FALSE}
+
+datatable(data.all[key == data.all[build_year_orig==1691, key],1:10], rownames = FALSE, style="bootstrap", class="table-condensed", options = list(dom = 'tp',scrollX = TRUE))
+
+```
+
+Now thats nice. We have 2 sales at that location and the build-year of the other sale is 1961. The 1691 entry is most likely human error on data entry. If you really want to check enter the lat and long into google maps and you'll see all the properties in that area are 5 story 1960's era buildings.
+
+Applying a similar trick for the 215 build_year, which we'd have a prior guess was meant to be 2015? Looking at the other sales at that location, 2015 seems a reasonable substitute. However look at the variation in max_floor and buid_year values. This data is really messy!.
+
+```{r, message=FALSE, warning=FALSE}
+
+datatable(data.all[key == data.all[build_year_orig==215,key ][1],1:10], rownames = FALSE, style="bootstrap", class="table-condensed", options = list(dom = 'tp',scrollX = TRUE))
+
+```
+The year = 4965 is a similar data entry error and should be 1965.
+
+```{r, message=FALSE, warning=FALSE}
+
+datatable(data.all[key == data.all[build_year_orig==4965,key ][1], 1:10], rownames = FALSE, style="bootstrap", class="table-condensed", options = list(dom = 'tp',scrollX = TRUE))
+
+``` 
+
+You can carry on applying a similar technique for the other extreme values and quickly get to the conclusion that;  
+ * 1691     should be   1961  
+ * 215      should be   2015  
+ * 4965     should be   1965  
+ * 2        should be   2014  
+ * 3        should be   2013 and 1960  
+ * 20       should be   2014  
+ * 20052009 should be   2009  
+  
+In so doing you'll observe that many properties with a build_year of 0,1 or missing share a location with other properties where the build_year is provided. This leads to the idea of using location to infill missing values.
+
+For now I'll apply the fixes above and set other extremes to NA.  
+
+```{r, message=FALSE, warning=FALSE}
+
+data.all[build_year_orig==1691,build_year := 1961]
+data.all[build_year_orig==215,build_year := 2015]
+data.all[build_year_orig==4965,build_year := 1965]
+data.all[build_year_orig==2,build_year := 2014]
+data.all[key == data.all[build_year_orig==3,key ][1],build_year := 2013]
+data.all[key == data.all[build_year_orig==3,key ][2],build_year := 1960]
+data.all[build_year_orig==20,build_year := 2014]
+data.all[build_year_orig==20052009,build_year := 2009]
+
+data.all[build_year_orig==0,build_year := NA]
+data.all[build_year_orig==1,build_year := NA]
+data.all[build_year_orig==71,build_year := NA]
+
+``` 
+  
+## Cleaning full_sq
+
+The data has a number of properties spurious values of full_sq. Anything lower than 20 and greater than 200 would be worthy of investigation. 0 an 1 are obvious errors and could be set to NA.
+
+
+```{r, message=FALSE, warning=FALSE}
+data.all[, full_sq_orig := full_sq]
+data.all[, full_sq_int := as.integer(full_sq)]
+
+summary(data.all$full_sq_int)
+table(data.all$full_sq_int)
+#hist(log(data.all$full_sq_int))
+
+```
+
+Lets have a look at a few of those extreme values to see what we can find. Starting with 5326...
+
+What are the details for all properties at that location?
+
+```{r, message=FALSE, warning=FALSE}
+
+datatable(data.all[key == data.all[full_sq_orig==5326, key],1:10], rownames = FALSE, style="bootstrap", class="table-condensed", options = list(dom = 'tp',scrollX = TRUE))
+
+```
+
+OK so looks like that one has been multiplied by 100 so should really be 53. What about a few others?
+
+Well if you apply the same approach you conclude the following.  
+603 -> 60  
+412 -> 41  
+407 -> 40  
+403 -> 40  
+394 -> 39  
+388-> 39  
+353-> 35  
+
+So a reasonable fix would be to divide by 10 for extremes below 1000. Lets apply some fixes and set other extremes to NA.
+
+```{r, message=FALSE, warning=FALSE}
+
+data.all[full_sq_orig > 1000,]
+
+data.all[full_sq_orig < 10, full_sq := NA]
+data.all[full_sq_orig > 250, full_sq := full_sq_orig / 10]
+data.all[full_sq_orig > 1000, full_sq := full_sq_orig / 100]
+
+data.all[, full_sq_int := as.integer(full_sq)]
+
+summary(data.all$full_sq_orig)
+summary(data.all$full_sq_int)
+
+table(data.all$full_sq_int)
+
+``` 
+
+# Location based anomalies
+
+Now I move onto to more sophisticated fixes. I will now look at properties by locaiton and identify locations with large discrepancies in other features.
+
+
+```{r, message=FALSE, warning=FALSE}
+
+# create a R function for Mode
+Mode = function(x){ 
+  ta = table(x)
+  tam = max(ta)
+  if (all(ta == tam))
+    mod = NA
+  else
+    if(is.numeric(x))
+      mod = as.numeric(names(ta)[ta == tam])
+  else
+    mod = names(ta)[ta == tam]
+  return(mod)
+}
+
+
+# some complications with data.table require as.double() wrapping
+data.locfeature <- data.all[,
+                            .(lat = as.numeric(mean(lat, na.rm = TRUE)),
+                              lon = as.numeric(mean(lon, na.rm = TRUE)),
+                              
+                              max_floor_avg = as.numeric(mean(max_floor, na.rm = TRUE)),
+                              max_floor_max = as.numeric(max(max_floor, na.rm = TRUE)),
+                              max_floor_min = as.numeric(min(max_floor, na.rm = TRUE)),
+                              max_floor_med = as.double(median(max_floor, na.rm = TRUE)),
+                              max_floor_mod = as.double(Mode(max_floor)),
+                              max_floor_sd = as.numeric(sd(max_floor, na.rm = TRUE)),
+                              max_floor_NA = as.numeric(sum(is.na(max_floor))),
+                              
+                              build_year_avg = as.numeric(mean(build_year, na.rm = TRUE)),
+                              build_year_max = as.numeric(max(build_year, na.rm = TRUE)),
+                              build_year_min = as.numeric(min(build_year, na.rm = TRUE)),
+                              build_year_med = as.double(median(build_year, na.rm = TRUE)),
+                              build_year_mod = as.double(Mode(build_year)),
+                              build_year_sd = as.numeric(sd(build_year, na.rm = TRUE)),
+                              build_year_NA = as.numeric(sum(is.na(build_year))),
+                              
+                              full_sq_avg = as.numeric(mean(full_sq, na.rm = TRUE)),
+                              full_sq_max = as.numeric(max(full_sq, na.rm = TRUE)),
+                              full_sq_min = as.numeric(min(full_sq, na.rm = TRUE)),
+                              full_sq_med = as.double(median(full_sq, na.rm = TRUE)),
+                              full_sq_mod = as.double(Mode(full_sq)),
+                              full_sq_sd = as.numeric(sd(full_sq, na.rm = TRUE)),
+                              full_sq_NA = as.numeric(sum(is.na(full_sq))),
+                              
+                              count.clean = .N,
+                              count.all = mean(count)), by= key_id]
+
+
+
+datatable(data.locfeature, rownames = FALSE, style="bootstrap", class="table-condensed", options = list(dom = 'tp',scrollX = TRUE))
+
+```
+
+# Whats next?
+
+Now I want to identify the properties that are near neighbours so I can append features from near neighbours to each record.
+
+I will do this in three ways:  
+ - identifying features of co-located properties
+ - identifying nearest neighbours;  
+ - identify neighbours within defined distances.
+   
+##Colocated properties. 
+
+
+```{r, message= FALSE, warning=FALSE}
+
+setkey(data.locfeature, key_id)
+setkey(data.all, key_id)
+
+data.all <- data.all[data.locfeature]
+
+```
+## Nearest neighbours
+
+To identify nearest neighbours I'll convert to spatial objects and use the nncross function from the spatstat package.
+
+```{r, message= FALSE, warning=FALSE}
+
+CRS_planar <- "+proj=utm +zone=36 +ellps=WGS72 +units=m +no_defs"
+CRS_WGS84 <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0 "
+
+
+locations.spdf = SpatialPointsDataFrame(
+                  coords = data.locfeature[, c('lon', 'lat')],
+                  proj4string = CRS(CRS_WGS84),
+                  data = data.locfeature)
+
+locations.spdf <- spTransform(locations.spdf, CRS(CRS_planar))
+
+#convert to ppp for nncross to work
+locations.ppp <-  as.ppp(locations.spdf)
+
+#identify nearest nearest neighbour and distance
+N <- as.data.table(nncross(locations.ppp,locations.ppp, k=2))
+setnames(N,names(N), c("dist_NN", "key_id_NN"))
+N$key_id <- data.locfeature$key_id
+
+setkey(N, key_id)
+
+data.locfeature <- data.locfeature[N]
+#data.all <- data.all[N]
+
+
+```
+
+## Neighbours within defined distance
+
+This is a rough and ready first attempt that illustrates the code. We'll use various spatial operators to identify properties within fixed distances such as 250m, 500m, 1km etc.
+
+Crude error checking has been added to enable the loop to run for multiple properties but it appears as those more is needed to prevent duplicate rows..
+
+```{r, message= FALSE, warning=FALSE}
+
+# define a list of distances (m) to search over
+lst_distances <- c(5000, 2000, 1000, 500, 250, 100)
+
+# define a list of property id's to search over
+lst_keys <- data.all[sub_area == 'Bibirevo', key_id]
+
+
+# define properties as spatial object
+properties.spdf = SpatialPointsDataFrame(
+                  coords = data.all[, c('lon', 'lat')],
+                  proj4string = CRS(CRS_WGS84),
+                  data = data.all)
+
+properties.spdf <- spTransform(properties.spdf, CRS(CRS_planar))
+
+# create function identify properties within series of distances 
+# and create summary measure
+get_distances <- function (my_keys, my_distances)
+{
+  
+  for (my_key_id in my_keys){
+    #my_key_id <- 1
+    #my_distances <- lst_distances[3]
+    
+     # select the location
+    point.spdf = locations.spdf[locations.spdf$key_id == my_key_id,]
+    point.sp <- SpatialPoints(point.spdf@coords, CRS(CRS_planar))
+    
+    sp_properties_clipped <- properties.spdf[gBuffer(point.sp, width = c(my_distances[1]), byid = T), ]
+    
+    cat(paste0("\n",my_key_id," dist..."))
+   
+    
+    for (i_distance in my_distances){
+      
+      #i_distance <- my_distances[1]
+      
+      cat(paste0(" ",i_distance,"..."))
+      
+      # create the buffer zone
+      pointbuff.spdf = gBuffer(point.sp, width = i_distance, byid = T)
+  
+      #clip properties to buffer
+      #sp_properties_clipped <- intersect(sp_properties_clipped, pointbuff.spdf)
+      sp_properties_clipped <- sp_properties_clipped[pointbuff.spdf, ]
+      
+      if (length(sp_properties_clipped) > 0){
+      data.loc.clipped <- as.data.table(sp_properties_clipped@data)
+      
+      data.loc.clipped.sum <- data.loc.clipped[,
+                              .(key_id = my_key_id,
+                                buff_dist = i_distance,
+                                
+                                max_floor_avg = as.numeric(mean(max_floor, na.rm = TRUE)),
+                                max_floor_max = as.numeric(max(max_floor, na.rm = TRUE)),
+                                max_floor_min = as.numeric(min(max_floor, na.rm = TRUE)),
+                                max_floor_med = as.double(median(max_floor, na.rm = TRUE)),
+                                max_floor_mod = as.double(Mode(max_floor)),
+                                max_floor_sd = sd(max_floor, na.rm = TRUE),
+                                max_floor_NA = as.numeric(sum(is.na(max_floor))),
+                                
+                                build_year_avg = as.numeric(mean(build_year, na.rm = TRUE)),
+                                build_year_max = as.numeric(max(build_year, na.rm = TRUE)),
+                                build_year_min = as.numeric(min(build_year, na.rm = TRUE)),
+                                build_year_med = as.double(median(build_year, na.rm = TRUE)),
+                                build_year_mod = as.double(Mode(build_year)),
+                                build_year_sd = as.numeric(sd(build_year, na.rm = TRUE)),
+                                build_year_NA = as.numeric(sum(is.na(build_year))),
+                                
+                                full_sq_avg = as.numeric(mean(full_sq, na.rm = TRUE)),
+                                full_sq_max = as.numeric(max(full_sq, na.rm = TRUE)),
+                                full_sq_min = as.numeric(min(full_sq, na.rm = TRUE)),
+                                full_sq_med = as.double(median(full_sq, na.rm = TRUE)),
+                                full_sq_mod = as.double(Mode(full_sq)),
+                                full_sq_sd = as.numeric(sd(full_sq, na.rm = TRUE)),
+                                full_sq_NA = as.numeric(sum(is.na(full_sq))),
+                                
+                                count.clean = .N,
+                                count.all = sum(count))]
+  
+      if(i_distance == my_distances[1] & my_key_id == my_keys[1]) dt_loc_dists <- data.loc.clipped.sum
+      if(i_distance != my_distances[1]) dt_loc_dists <- rbind(dt_loc_dists,data.loc.clipped.sum )
+      
+      }
+    }
+  }
+  return(dt_loc_dists)
+}
+
+
+sample_dists <- get_distances(my_keys = lst_keys, my_distances = lst_distances)
+
+datatable(sample_dists, rownames = FALSE, style="bootstrap", class="table-condensed", options = list(dom = 'tp',scrollX = TRUE))
+```
+
