@@ -13,5 +13,8 @@ sys.path.append(module_path)
 #cmd = 'rm ../result/*.csv'
 #os.system(cmd)
 
-cmd = 'python xgboost_model4.py'
+#cmd = 'python xgboost_model4.py'
+#os.system(cmd)
+
+cmd = 'python stacking.py'
 os.system(cmd)
