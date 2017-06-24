@@ -17,7 +17,7 @@ from sklearn.metrics import mean_squared_error
 # my own module
 from features import data_utils
 
-def readDate(isLog1p=True):
+def readData(isLog1p=True):
     train, test, macro = data_utils.load_data()
 
     mult = .969
@@ -32,7 +32,6 @@ def readDate(isLog1p=True):
     submit_ids = pd.read_csv('../../input/test.csv')['id']
     test.drop(['id'], axis=1, inplace=True)
 
-    # 合并训练集和测试集
     conbined_data = pd.concat([train[test.columns.values], test])
     # macro_cols = ["balance_trade", "balance_trade_growth", "eurrub", "average_provision_of_build_contract",
     #               "micex_rgbi_tr", "micex_cbi_tr", "deposits_rate", "mortgage_value", "mortgage_rate",
@@ -53,3 +52,4 @@ def readDate(isLog1p=True):
     test = conbined_data.iloc[train.shape[0]:, :]
     
     return train, test, ylog_train_all
+
