@@ -53,3 +53,34 @@ def readData(isLog1p=True):
     
     return train, test, ylog_train_all
 
+def data_preprocess(X_train,X_test):
+
+    all_data = pd.concat((X_train,X_test))
+    
+#     lowerClipCol = ['floor_from_top', 'roomsize', 'extra_area', 'age_at_sale']
+#     for c in lowerClipCol:
+#         all_data[[c]]=all_data[[c]].clip(lower=0)
+    
+# # #     to_delete = ['Alley','FireplaceQu','PoolQC','Fence','MiscFeature']
+# # #     all_data = all_data.drop(to_delete,axis=1)
+
+# #     #train["SalePrice"] = np.log1p(train["SalePrice"])
+# #     #log transform skewed numeric features
+#     numeric_feats = all_data.dtypes[all_data.dtypes != "object"].index
+#     skewed_feats = X_train[numeric_feats].apply(lambda x: skew(x.dropna())) #compute skewness
+#     skewed_feats = skewed_feats[skewed_feats > 0.75]
+#     skewed_feats = skewed_feats.index
+#     all_data[skewed_feats] = np.log1p(all_data[skewed_feats])
+#     #all_data = pd.get_dummies(all_data)
+    #all_data = all_data.fillna(all_data.median())
+    
+    all_data.replace([np.infty, -np.infty], np.nan)
+    imp = Imputer(missing_values=np.nan, strategy='median')
+    all_data=pd.DataFrame(imp.fit_transform(all_data), columns=all_data.columns)
+    imp = Imputer(missing_values=np.infty, strategy='median')
+    all_data=pd.DataFrame(imp.fit_transform(all_data), columns=all_data.columns)
+
+    X_train = all_data[:X_train.shape[0]]
+    X_test = all_data[X_train.shape[0]:]
+
+    return X_train,X_test
