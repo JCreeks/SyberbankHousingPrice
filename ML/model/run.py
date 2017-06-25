@@ -16,5 +16,5 @@ sys.path.append(module_path)
 #cmd = 'python xgboost_model4.py'
 #os.system(cmd)
 
-cmd = 'python stacking.py'
+cmd = 'python Stacking.py'
 os.system(cmd)
