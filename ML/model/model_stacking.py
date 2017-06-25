@@ -70,49 +70,88 @@ test = conbined_data[train.shape[0]:, :]
 test_size = (1.0 * test.shape[0]) / train.shape[0]
 print "submit test size:", test_size
 
-et_params = {
-    'n_jobs': 16,
-    'n_estimators': 100,
-    'max_features': 0.5,
-    'max_depth': 12,
-    'min_samples_leaf': 2,
-}
+# et_params = {
+#     'n_jobs': 16,
+#     'n_estimators': 100,
+#     'max_features': 0.5,
+#     'max_depth': 12,
+#     'min_samples_leaf': 2,
+# }
 
-rf_params = {
-    'n_jobs': 16,
-    'n_estimators': 100,
-    'max_features': 0.2,
-    'max_depth': 12,
-    'min_samples_leaf': 2,
-}
+# rf_params = {
+#     'n_jobs': 16,
+#     'n_estimators': 100,
+#     'max_features': 0.2,
+#     'max_depth': 12,
+#     'min_samples_leaf': 2,
+# }
 
-xgb_params = {
-    'eta': 0.05,
-    'max_depth': 5,
-    'subsample': 0.7,
-    'colsample_bytree': 0.7,
-    'objective': 'reg:linear',
-    'eval_metric': 'rmse',
-    'silent': 1
-}
+# xgb_params = {
+#     'eta': 0.05,
+#     'max_depth': 5,
+#     'subsample': 0.7,
+#     'colsample_bytree': 0.7,
+#     'objective': 'reg:linear',
+#     'eval_metric': 'rmse',
+#     'silent': 1
+# }
 
-rd_params = {
-    'alpha': 10
-}
+# rd_params = {
+#     'alpha': 10
+# }
 
-ls_params = {
-    'alpha': 0.005
-}
+# ls_params = {
+#     'alpha': 0.005
+# }
+
+# SEED = 0
+
+# xg = XgbWrapper(seed=SEED, params=xgb_params)
+# et = SklearnWrapper(clf=ExtraTreesRegressor, seed=SEED, params=et_params)
+# rf = SklearnWrapper(clf=RandomForestRegressor, seed=SEED, params=rf_params)
+# rd = SklearnWrapper(clf=Ridge, seed=SEED, params=rd_params)
+# ls = SklearnWrapper(clf=Lasso, seed=SEED, params=ls_params)
+
+# level_1_models = [xg, et, rf, rd, ls]
+
+rf_params1 = {'max_depth':6, 'n_jobs':-1, 'n_estimators':500, 'max_features':.95}
+
+rf_params2 = {'max_depth':12, 'min_samples_leaf':2, 'n_jobs':-1, 'n_estimators':100, 'max_features':.2}
+
+et_params1 = {'min_samples_leaf':2, 'max_depth':12, 'n_jobs':-1, 'n_estimators':100, 'max_features':.5}
+
+et_params2 = {'min_samples_leaf':2, 'max_depth':12, 'n_jobs':-1, 'n_estimators':100, 'max_features':.5}
+
+gb_params1 = {'learning_rate':0.02, 'n_estimators':500, 'min_samples_leaf':70, 'min_samples_split':200, 
+              'max_features':'sqrt', 'max_depth':6, 'subsample':0.85}
+
+gb_params2 = {'n_estimators':500, 'max_features':15, 'max_depth':6, 'learning_rate':0.05, 'subsample':0.8}
+
+xgb_params1 = {'learning_rate':.05, 'subsample':.95, 'max_depth':4, 'min_child_weight':4, 'n_estimators':620, 
+              'colsample_bytree':0.95, 'gamma':.4}
+
+xgb_params2 = {'learning_rate':.05, 'subsample':.7, 'max_depth':5, 'n_estimators':309, 'colsample_bytree':0.7}
+
+lcv_params = {'alphas' : [1, 0.1, 0.001, 0.0005]}
+
+rd_params = {'alpha': 10}
+
+ls_params = {'alpha': 0.005}
+
+eln_params = {}
 
 SEED = 0
 
-xg = XgbWrapper(seed=SEED, params=xgb_params)
-et = SklearnWrapper(clf=ExtraTreesRegressor, seed=SEED, params=et_params)
-rf = SklearnWrapper(clf=RandomForestRegressor, seed=SEED, params=rf_params)
-rd = SklearnWrapper(clf=Ridge, seed=SEED, params=rd_params)
-ls = SklearnWrapper(clf=Lasso, seed=SEED, params=ls_params)
+level_1_models = [XgbWrapper(seed=SEED, params=xgb_params1), XgbWrapper(seed=SEED, params=xgb_params2)]
 
-level_1_models = [xg, et, rf, rd, ls]
+params_list = [rf_params1, rf_params2, et_params1, et_params2, gb_params1, gb_params2, 
+               lcv_params, rd_params, ls_params, eln_params]
+
+func_list = [RandomForestRegressor, RandomForestRegressor, ExtraTreesRegressor, ExtraTreesRegressor, 
+             GradientBoostingRegressor, GradientBoostingRegressor, LassoCV, Ridge, Lasso, ElasticNet]
+level_1_models = level_1_models + \
+    list(map(lambda x: SklearnWrapper(clf=x[1], seed=SEED, params=x[0]), zip(params_list, func_list)))
+    
 stacking_model = XgbWrapper(seed=SEED, params=xgb_params)
 
 model_stack = TwoLevelModelStacking(train, y_train, test, level_1_models, stacking_model=stacking_model, stacking_with_pre_features=False)
