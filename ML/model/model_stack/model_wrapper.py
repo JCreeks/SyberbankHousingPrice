@@ -14,6 +14,7 @@ sys.path.append(module_path)
 import xgboost as xgb
 from abc import ABCMeta, abstractmethod
 from sklearn.grid_search import GridSearchCV
+from sklearn.metrics import make_scorer, mean_squared_error
 
 def RMSLE_(y_val, y_val_pred):
     return np.sqrt(np.mean((np.log(y_val+1)-np.log(y_val_pred+1))**2))
