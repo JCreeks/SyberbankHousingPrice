@@ -20,10 +20,14 @@ class TwoLevelModelStacking(object):
     """两层的 model stacking"""
 
     def __init__(self, train, y_train, test,
-                 models, stacking_model,
+                 models, stacking_model, isLog1p=True,
                  stacking_with_pre_features=True, n_folds=5, random_seed=0):
         self.train = train
-        self.y_train = y_train
+        self.isLog1p=isLog1p
+        if (self.isLog1p):
+            self.y_train = np.log1p(y_train)
+        else:
+            self.y_train = y_train
         self.test = test
         self.n_folds = n_folds
         self.models = models
@@ -78,4 +82,6 @@ class TwoLevelModelStacking(object):
 
         # stacking predict
         predicts = self.stacking_model.predict(x_test)
+        if (self.isLog1p):
+            predicts = np.expm1(predicts)
         return predicts, cv_mean
