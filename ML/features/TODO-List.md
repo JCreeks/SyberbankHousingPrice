@@ -5,3 +5,6 @@
 
 可以看出 generate_neighbourhood_features 的特征 和 经纬度特征 存在可能某种相关，
 但两个特征单独使用都使模型提高！可以考虑经纬度和其他特征进行某种融合。
+
+- drop any feature that has a correlation coef lower than 0.05 with the target relevance.
+- Explore other feature selection strategies, e.g., greedy forward feature selection (FFS) and greedy backward feature selection (BFS).

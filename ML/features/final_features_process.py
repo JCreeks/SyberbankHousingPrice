@@ -61,7 +61,7 @@ def feature_discretization(conbined_data):
             mingap = (conbined_data[column].max() - conbined_data[column].min()) / 400.0
 
         if (set_len > 5000) and (set_len <= 20000):
-            mingap = (conbined_data[column].max() - conbined_data[column].min()) / 1000.0
+            mingap = (conbined_data[column].max() - conbined_data[column].min()) / 600.0
 
         conbined_data[column + '_dis'] = np.round(conbined_data[column].values / np.maximum(mingap, 1.0))
 

@@ -28,6 +28,9 @@ class Configure(object):
     processed_macro_path = '../../input/processed_macro_data.pkl'
  
     time_window_salecount_features_path = '../../input/time_window_{}_subarea_salecount_features.pkl'
+
+    groupby_time_window_salecount_features_path = '../../input/time_window_{}_subarea_salecount_features_pre_{}_days.pkl'
+    single_time_window_salecount_features_path = '../../input/time_window_{}_salecount_features_pre_{}_days.pkl'
  
     multicollinearity_features = '../../input/multicollinearity_features.pkl'
  

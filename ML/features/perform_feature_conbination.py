@@ -33,6 +33,19 @@ def perform_internal_characteristics(conbined_data):
 
     return conbined_data
 
+def perform_feature_conbination(conbined_data):
+    """ 高 feature importance 的特征进行组合"""
+    # importance_features = ['full_sq', 'floor', 'life_sq', 'max_floor', 'life_sq_ratio',
+    #                        'kitch_sq_ratio', 'full_sq_dis', 'railroad_km', 'mosque_km',
+    #                        'church_synagogue_km', 'water_treatment_km', 'theater_km',
+    #                        'metro_min_walk', 'rel_floor', 'kindergarten_km', 'metro_km_avto', 'floor_density',
+    #                        'metro_min_avto', 'park_km', 'cemetery_km', 'power_transmission_line_km']
+    #
+    # for f in importance_features:
+    #     conbined_data[f + '_build_year'] = conbined_data[f] * conbined_data['build_year']
+
+    return conbined_data
+
 def main():
     print 'loading train and test datas...'
     train, test, _ = data_utils.load_data()
@@ -49,6 +62,7 @@ def main():
     conbined_data.columns = test.columns.values
 
     conbined_data = perform_internal_characteristics(conbined_data)
+    conbined_data = perform_feature_conbination(conbined_data)
 
     train = conbined_data.iloc[:train.shape[0], :]
     test = conbined_data.iloc[train.shape[0]:, :]

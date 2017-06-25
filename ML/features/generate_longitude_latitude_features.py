@@ -46,7 +46,7 @@ def kremlin_distance(data):
 
 def generate_distance_features(conbined_data, longitude_latitude):
     """ 根据经纬度获取距离特征 """
-    conbined_data = pd.merge(conbined_data, longitude_latitude, how='left', on='sub_area')#'id')#
+    conbined_data = pd.merge(conbined_data, longitude_latitude, how='left', on='sub_area')
     kremlin_longitude = 55.752121
     kremlin_latitude = 37.617664
     conbined_data['kremlin_distance'] = (conbined_data['latitude'].values - kremlin_latitude) ** 2 + \

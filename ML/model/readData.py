@@ -13,6 +13,7 @@ import warnings
 warnings.filterwarnings('ignore')
 from sklearn import preprocessing
 from sklearn.metrics import mean_squared_error
+from sklearn.preprocessing import Imputer
 
 # my own module
 from features import data_utils

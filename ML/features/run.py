@@ -10,7 +10,7 @@ import sys
 module_path = os.path.abspath(os.path.join('..'))
 sys.path.append(module_path)
 
-cmd = 'rm ../../input/processed_*.pkl'
+cmd = 'rm ../data/processed_*.pkl'
 os.system(cmd)
 
 cmd = 'python impute_missing_data.py'
@@ -50,5 +50,8 @@ os.system(cmd)
 
 cmd = 'python delete_some_features.py'
 os.system(cmd)
+
+# cmd = 'python final_generate_time_window_features.py'
+# os.system(cmd)
 
 print 'feature engineering done!'
