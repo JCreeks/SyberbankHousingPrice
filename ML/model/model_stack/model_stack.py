@@ -78,4 +78,4 @@ class TwoLevelModelStacking(object):
 
         # stacking predict
         predicts = self.stacking_model.predict(x_test)
-        return predicts
+        return predicts, cv_mean

@@ -116,7 +116,7 @@ level_1_models = [xg, et, rf, rd, ls]
 stacking_model = XgbWrapper(seed=SEED, params=xgb_params)
 
 model_stack = TwoLevelModelStacking(train, y_train, test, level_1_models, stacking_model=stacking_model, stacking_with_pre_features=False)
-predicts = model_stack.run_stack_predict()
+predicts, score = model_stack.run_stack_predict()
 
 df_sub = pd.DataFrame({'id': submit_ids, 'price_doc': predicts})
 df_sub.to_csv(Configure.submission_path, index=False)
