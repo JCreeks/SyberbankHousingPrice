@@ -22,24 +22,30 @@ warnings.filterwarnings('ignore')
 # my own module
 import data_utils
 
-def delete_some_features(train, test):
 
+def delete_some_features(train, test):
     delete_features = ['per_raion_person_area', 'per_raion_person_green_zone_part', 'per_raion_person_indust_part',
-                       'indust_area_m_ratio', 'children_preschool_popul_ratio', 'children_preschool_preschool_quota_gap',
-                       'children_preschool_preschool_quota_gap_ratio', 'children_school_popul_ratio', 'children_school_school_quota_gap',
+                       'indust_area_m_ratio', 'children_preschool_popul_ratio',
+                       'children_preschool_preschool_quota_gap',
+                       'children_preschool_preschool_quota_gap_ratio', 'children_school_popul_ratio',
+                       'children_school_school_quota_gap',
                        'children_school_school_quota_gap_ratio', 'school_education_centers_raion_ratio',
-                       'preschool_education_centers_raion_ratio', 'sport_objects_raion_ratio', 'additional_education_raion_ratio',
-                       'hospital_beds_raion_raion_popul_ratio', 'male_ratio', 'female_ratio', 'young_underwork_vs_full_all_ratio',
+                       'preschool_education_centers_raion_ratio', 'sport_objects_raion_ratio',
+                       'additional_education_raion_ratio',
+                       'hospital_beds_raion_raion_popul_ratio', 'male_ratio', 'female_ratio',
+                       'young_underwork_vs_full_all_ratio',
                        'young_male_vs_underwork_ratio', 'young_female_vs_underwork_ratio', 'young_male_vs_malef_ratio',
                        'young_female_vs_femalef_ratio', 'work_all_vs_full_all_ratio', 'work_male_vs_work_all_ratio',
                        'work_female_vs_work_all_ratio', 'work_male_vs_malef_ratio', 'work_female_vs_femalef_ratio',
-                       'ekder_all_vs_full_all_ratio', 'ekder_male_vs_ekder_all_ratio', 'ekder_female_vs_ekder_all_ratio',
+                       'ekder_all_vs_full_all_ratio', 'ekder_male_vs_ekder_all_ratio',
+                       'ekder_female_vs_ekder_all_ratio',
                        'ekder_male_vs_malef_ratio', 'ekder_female_vs_femalef_ratio', '0_6_all_age_ratio',
                        '7_14_all_age_ratio', '0_17_all_age_ratio', '16_29_all_age_ratio', '0_13_all_age_ratio',
                        '0_6_all_vs_children_preschool', '0_6_all_vs_preschool_quota', '7_14_all_vs_children_school',
                        '7_14_all_vs_school_quota', 'build_block_ratio', 'build_wood_ratio', 'build_frame_ratio',
                        'build_brick_ratio', 'build_monolith_ratio', 'build_panel_ratio', 'build_foam_ratio',
-                       'build_slag_ratio', 'build_mix_ratio', 'build_count_before_1920_ratio', 'build_count_1921-1945_ratio',
+                       'build_slag_ratio', 'build_mix_ratio', 'build_count_before_1920_ratio',
+                       'build_count_1921-1945_ratio',
                        'build_count_1946-1970_ratio', 'build_count_1971-1995_ratio', 'build_count_after_1995_ratio']
 
     for df in delete_features:
@@ -98,6 +104,40 @@ def delete_some_non_important_features(train, test):
     delete_features = importance['feature'][importance['fscore'] < 2]
     return delete_features
 
+
+from scipy.stats import pearsonr
+
+
+def _dim(x):
+    d = 1 if len(x.shape) == 1 else x.shape[1]
+    return d
+
+
+def _corr(x, y_train):
+    if _dim(x) == 1:
+        corr = pearsonr(x, y_train)[0]
+        if str(corr) == "nan":
+            corr = 0.
+    else:
+        corr = 1.
+    return corr
+
+
+def get_low_corr_features(train, min_corr=0.01):
+    num_columns = train.select_dtypes(exclude=['object']).columns.values
+    num_columns = num_columns.tolist()
+    num_columns.remove('timestamp')
+    corrs = []
+    for f in num_columns:
+        corrs.append(_corr(train[f], train['price_doc']))
+    features_corrs = pd.DataFrame({'feature_vs_price_doc': num_columns,
+                                   'pearsonr_corr': corrs})
+    features_corrs['pearsonr_corr'] = np.absolute(features_corrs['pearsonr_corr'])
+    features_corrs.sort_values(by='pearsonr_corr', inplace=True)
+    low_corr_features = features_corrs[features_corrs['pearsonr_corr'] < min_corr]['feature_vs_price_doc'].values
+    return low_corr_features
+
+
 def main():
     print 'loading train and test datas...'
     train, test, _ = data_utils.load_data()
@@ -109,6 +149,11 @@ def main():
     # print 'delete_features:', len(delete_features)
     #
     # for f in delete_features:
+    #     del train[f]
+    #     del test[f]
+
+    # low_corr_features = get_low_corr_features(train, min_corr=0.00)
+    # for f in low_corr_features:
     #     del train[f]
     #     del test[f]
 

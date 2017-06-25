@@ -61,8 +61,8 @@ def perform_num_room_features(train, test):
     # test.loc[test['num_room'] == 0, 'num_room'] = 2
 
     # 添加每个 living rome 房间的面积
-    # train['per_living_room_sq'] = train['life_sq'] / train['num_room']
-    # test['per_living_room_sq'] = test['life_sq'] / test['num_room']
+    # train['per_living_room_sq'] = (train['life_sq'] - train['kitch_sq']) / train['num_room']
+    # test['per_living_room_sq'] = (test['life_sq'] - train['kitch_sq']) / test['num_room']
 
     return train, test
 

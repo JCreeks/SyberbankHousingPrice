@@ -32,12 +32,11 @@ def main():
     mult = .969
 
     train['price_doc'] = train["price_doc"] * mult + 10
-    #train['price_doc'] = np.log1p(train['price_doc'])
+    # train['price_doc'] = np.log1p(train['price_doc'])
     ylog_train_all = train['price_doc']
     id_train = train['id']
     train.drop(['id', 'price_doc'], axis=1, inplace=True)
-    #submit_ids = test['id']
-    submit_ids = pd.read_csv('../../input/test.csv')['id']
+    submit_ids = test['id']
     test.drop(['id'], axis=1, inplace=True)
 
     # 合并训练集和测试集
@@ -98,8 +97,7 @@ def main():
         'colsample_bytree': 0.7,
         'objective': 'reg:linear',
         'eval_metric': 'rmse',
-        'silent': 1,
-        'seed':5
+        'silent': 1
     }
 
     num_round = 1000
@@ -118,9 +116,9 @@ def main():
 
     print 'predict submit...'
     y_pred = model.predict(dtest)
-    #y_pred = np.exp(model.predict(dtest)) - 1
+    # y_pred = np.exp(ylog_pred) - 1
     df_sub = pd.DataFrame({'id': submit_ids, 'price_doc': y_pred})
-    df_sub.to_csv('../result/jun22_2_seed5_xgboost_model_4.csv', index=False) # 0.31499
+    df_sub.to_csv('xgboost_model_4.csv', index=False) # 0.31499
 
     # save model
     model.save_model('xgboost_model4.model')
