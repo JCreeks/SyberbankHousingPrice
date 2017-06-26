@@ -164,8 +164,8 @@ xgb_params = {
 }
 stacking_model = XgbWrapper(seed=SEED, params=xgb_params)
 
-model_stack = TwoLevelModelStacking(train, y_train, test, level_1_models, stacking_model=stacking_model, stacking_with_pre_features=False, n_folds=5, random_seed=0, isLog1p=True)
+model_stack = TwoLevelModelStacking(train, y_train, test, level_1_models, stacking_model=stacking_model, stacking_with_pre_features=False, n_folds=5, random_seed=0, isLog1p=False)
 predicts, score = model_stack.run_stack_predict()
 
 df_sub = pd.DataFrame({'id': submit_ids, 'price_doc': predicts})
-df_sub.to_csv(Configure.submission_path, index=False)
+df_sub.to_csv(Configure.submission_path+str(score)+'.csv', index=False)
