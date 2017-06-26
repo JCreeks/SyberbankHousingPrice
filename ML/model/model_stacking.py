@@ -19,9 +19,10 @@ warnings.filterwarnings('ignore')
 
 from sklearn import preprocessing
 from sklearn.preprocessing import StandardScaler
-from sklearn.ensemble import ExtraTreesRegressor
+from sklearn.ensemble import ExtraTreesRegressor, GradientBoostingRegressor
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import Ridge, Lasso
+from sklearn.linear_model import LassoCV,LassoLarsCV, ElasticNet
 
 from model_stack.model_wrapper import XgbWrapper, SklearnWrapper, GridCVWrapper
 from model_stack.model_stack import TwoLevelModelStacking
@@ -151,10 +152,19 @@ func_list = [RandomForestRegressor, RandomForestRegressor, ExtraTreesRegressor, 
              GradientBoostingRegressor, GradientBoostingRegressor, LassoCV, Ridge, Lasso, ElasticNet]
 level_1_models = level_1_models + \
     list(map(lambda x: SklearnWrapper(clf=x[1], seed=SEED, params=x[0]), zip(params_list, func_list)))
-    
+
+xgb_params = {
+    'eta': 0.05,
+    'max_depth': 5,
+    'subsample': 0.7,
+    'colsample_bytree': 0.7,
+    'objective': 'reg:linear',
+    'eval_metric': 'rmse',
+    'silent': 1
+}
 stacking_model = XgbWrapper(seed=SEED, params=xgb_params)
 
-model_stack = TwoLevelModelStacking(train, y_train, test, level_1_models, stacking_model=stacking_model, stacking_with_pre_features=False)
+model_stack = TwoLevelModelStacking(train, y_train, test, level_1_models, stacking_model=stacking_model, stacking_with_pre_features=False, n_folds=5, random_seed=0, isLog1p=True)
 predicts, score = model_stack.run_stack_predict()
 
 df_sub = pd.DataFrame({'id': submit_ids, 'price_doc': predicts})
