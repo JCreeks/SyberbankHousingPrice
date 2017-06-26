@@ -157,15 +157,17 @@ class ThreeLevelModelStacking(object):
             x_test = np.concatenate((x_test, oof_test), axis=1)
             
         # run level-3 stacking
+        #xgbWrapper only
         best_nrounds, cv_mean, cv_std = self.stacking_model.cv_train(x_train, self.y_train)
         self.stacking_model.nrounds = best_nrounds
         print('Ensemble-CV: {0}+{1}'.format(cv_mean, cv_std))
-            
+        #xgbWrapper only
+        
         self.stacking_model.train(x_train, self.y_train)
        
 
         # stacking predict
-        predicts = self.stacking_model.predict(x_test)
+        predicts, score = self.stacking_model.predict(x_test)
         if (self.isLog1p):
             predicts = np.expm1(predicts)
-        return predicts, cv_mean
+        return predicts, score

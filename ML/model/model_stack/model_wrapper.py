@@ -55,6 +55,7 @@ class XgbWrapper(BaseWrapper):
         self.param = params
         self.param['seed'] = seed
         self.nrounds = params.pop('nrounds', 250)
+        self.score = 0
 
     def train(self, x, y):
         dtrain = xgb.DMatrix(x, label=y)
@@ -68,10 +69,11 @@ class XgbWrapper(BaseWrapper):
         best_nrounds = res.shape[0] - 1
         cv_mean = res.iloc[-1, 0]
         cv_std = res.iloc[-1, 1]
+        self.score = cv_mean
         return best_nrounds, cv_mean, cv_std
 
     def predict(self, x):
-        return self.gbdt.predict(xgb.DMatrix(x))
+        return self.gbdt.predict(xgb.DMatrix(x)), self.score
     
 class GridCVWrapper(BaseWrapper):
     def __init__(self, clf, seed=0, cv_fold=5, params=None, scoring=RMSE, param_grid = {
@@ -79,9 +81,11 @@ class GridCVWrapper(BaseWrapper):
         }):
         params['random_state'] = seed
         self.grid = GridSearchCV(estimator=clf(**params), param_grid=param_grid, n_jobs=-1, cv=cv_fold, scoring=scoring)
+        self.score = 0
 
     def train(self, x, y):
         self.grid.fit(x, y)
+        self.score = -self.grid.best_score_
 
     def predict(self, x):
-        return self.grid.predict(x)
+        return self.grid.predict(x), self.score
