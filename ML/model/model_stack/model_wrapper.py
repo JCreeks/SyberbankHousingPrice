@@ -73,7 +73,9 @@ class XgbWrapper(BaseWrapper):
         return best_nrounds, cv_mean, cv_std
 
     def predict(self, x):
-        return self.gbdt.predict(xgb.DMatrix(x)), self.score
+        return self.gbdt.predict(xgb.DMatrix(x))
+    def getScore(self):
+        return self.score
     
 class GridCVWrapper(BaseWrapper):
     def __init__(self, clf, seed=0, cv_fold=5, params=None, scoring=RMSE, param_grid = {
@@ -90,4 +92,6 @@ class GridCVWrapper(BaseWrapper):
         self.score = -self.grid.best_score_
 
     def predict(self, x):
-        return self.grid.predict(x), self.score
+        return self.grid.predict(x)
+    def getScore(self):
+        return self.score

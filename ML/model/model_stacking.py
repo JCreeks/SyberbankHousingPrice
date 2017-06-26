@@ -112,7 +112,7 @@ rf = SklearnWrapper(clf=RandomForestRegressor, seed=SEED, params=rf_params)
 rd = SklearnWrapper(clf=Ridge, seed=SEED, params=rd_params)
 ls = SklearnWrapper(clf=Lasso, seed=SEED, params=ls_params)
 
-level_1_models = [xg, et]
+level_1_models = [xg, et, rf, rd, ls]
 stacking_model = SklearnWrapper(clf=RandomForestRegressor, seed=SEED, params=rf_params)
 #XgbWrapper(seed=SEED, params=xgb_params)
 

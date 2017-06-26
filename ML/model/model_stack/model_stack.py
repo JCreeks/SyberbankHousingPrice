@@ -181,7 +181,8 @@ class ThreeLevelModelStacking(object):
        
 
         # stacking predict
-        predicts, score = self.stacking_model.predict(x_test)
+        predicts = self.stacking_model.predict(x_test)
+        score = self.stacking_model.getScore()
         if (self.isLog1p):
             predicts = np.expm1(predicts)
         print("stackingCV: {}".format(score))
