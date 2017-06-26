@@ -163,8 +163,13 @@ xgb_params = {
     'silent': 1
 }
 stacking_model = XgbWrapper(seed=SEED, params=xgb_params)
+#stacking_model = GridCVWrapper(Ridge, seed=SEED, cv_fold=5, params=None, scoring=RMSLE, param_grid = {
+#            'alpha': [1e-3,5e-3,1e-2,5e-2,1e-1,0.2,0.3,0.4,0.5,0.8,1e0,3,5,7,1e1]})
 
 model_stack = TwoLevelModelStacking(train, y_train, test, level_1_models, stacking_model=stacking_model, stacking_with_pre_features=False, n_folds=5, random_seed=0, isLog1p=False)
+
+#model_stack = ThreeLevelModelStacking(train, y_train, test, level_1_models, level_2_models, #stacking_model=stacking_model, stacking_with_pre_features=False, n_folds=5, random_seed=0, isLog1p=False)
+
 predicts, score = model_stack.run_stack_predict()
 
 df_sub = pd.DataFrame({'id': submit_ids, 'price_doc': predicts})
