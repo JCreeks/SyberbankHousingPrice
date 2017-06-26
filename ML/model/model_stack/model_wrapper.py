@@ -38,7 +38,7 @@ class BaseWrapper(object):
 
 
 class SklearnWrapper(BaseWrapper):
-    def __init__(self, clf, seed=None, params=None):
+    def __init__(self, clf, seed=None, params={}):
         if (seed):
             params['random_state'] = seed
         self.clf = clf(**params)
@@ -51,7 +51,7 @@ class SklearnWrapper(BaseWrapper):
 
 
 class XgbWrapper(BaseWrapper):
-    def __init__(self, seed=0, params=None):
+    def __init__(self, seed=0, params={}):
         self.param = params
         self.param['seed'] = seed
         self.nrounds = params.pop('nrounds', 250)
@@ -79,6 +79,8 @@ class GridCVWrapper(BaseWrapper):
     def __init__(self, clf, seed=0, cv_fold=5, params=None, scoring=RMSE, param_grid = {
             'alpha': [1e-3,5e-3,1e-2,5e-2,1e-1,0.2,0.3,0.4,0.5,0.8,1e0,3,5,7,1e1],
         }):
+        if (not params):
+            params = {}
         params['random_state'] = seed
         self.grid = GridSearchCV(estimator=clf(**params), param_grid=param_grid, n_jobs=-1, cv=cv_fold, scoring=scoring)
         self.score = 0
