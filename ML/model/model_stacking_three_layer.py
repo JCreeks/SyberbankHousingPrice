@@ -204,7 +204,7 @@ stacking_model = GridCVWrapper(Ridge, seed=SEED, cv_fold=5, params={}, scoring=R
 #model_stack = TwoLevelModelStacking(train, y_train, test, level_1_models, #stacking_model=stacking_model, stacking_with_pre_features=False, n_folds=5, #random_seed=0, isLog1p=False)
 
 model_stack = ThreeLevelModelStacking(train, y_train, test, level_1_models, level_2_models, 
-stacking_model=stacking_model, stacking_with_pre_features=False, n_folds=5, random_seed=0, isLog1p=False)
+stacking_model=stacking_model, stacking_with_pre_features=False, n_folds=5, random_seed=0, isLog1p=True)
 
 predicts, score= model_stack.run_stack_predict()
 
