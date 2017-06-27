@@ -1,0 +1,30 @@
+rm: cannot remove '../result/*.csv': No such file or directory
+Terminated
+conbined_data: (36650, 702)
+submit test size: 0.264316268801
+fold-0: train: [    0     1     2 ..., 28984 28985 28986], test: [    4     7    18 ..., 28980 28982 28987]
+best_score 0.596501613561
+alphas: 1.0
+train_rmse = 2539337.89054
+fold-1: train: [    0     1     2 ..., 28981 28982 28987], test: [    8     9    12 ..., 28984 28985 28986]
+best_score 0.604089231034
+alphas: 1.0
+train_rmse = 2558365.16649
+fold-2: train: [    4     7     8 ..., 28985 28986 28987], test: [    0     1     2 ..., 28970 28974 28976]
+best_score 0.592812330777
+alphas: 1.0
+train_rmse = 2633781.77737
+fold-3: train: [    0     1     2 ..., 28985 28986 28987], test: [   11    21    23 ..., 28955 28960 28978]
+best_score 0.600508623234
+alphas: 1.0
+train_rmse = 2543873.76284
+fold-4: train: [    0     1     2 ..., 28985 28986 28987], test: [   10    13    19 ..., 28972 28979 28981]
+best_score 0.599209852771
+alphas: 1.0
+train_rmse = 2573988.67045
+Traceback (most recent call last):
+  File "lasso_model_roof.py", line 124, in <module>
+    main()
+  File "lasso_model_roof.py", line 118, in main
+    train_predict.to_csv(Configure.train_cv_result_for_model_stacking.format('lasso', time.strftime('%Y-%m-%d_%H:%M:%S', time.localtime(time.time()))),
+AttributeError: type object 'Configure' has no attribute 'train_cv_result_for_model_stacking'
