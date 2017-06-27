@@ -1,0 +1,99 @@
+/home/ubuntu/anaconda2/lib/python2.7/site-packages/sklearn/cross_validation.py:44: DeprecationWarning: This module was deprecated in version 0.18 in favor of the model_selection module into which all the refactored classes and functions are moved. Also note that the interface of the new CV iterators are different from that of this module. This module will be removed in 0.20.
+  "This module will be removed in 0.20.", DeprecationWarning)
+/home/ubuntu/anaconda2/lib/python2.7/site-packages/sklearn/grid_search.py:43: DeprecationWarning: This module was deprecated in version 0.18 in favor of the model_selection module into which all the refactored classes and functions are moved. This module will be removed in 0.20.
+  DeprecationWarning)
+conbined_data: (36650, 702)
+submit test size: 0.264316268801
+<model_stack.model_wrapper.XgbWrapper object at 0x7f7a9df32450>-1stCV: 0.323251230419
+<model_stack.model_wrapper.XgbWrapper object at 0x7f7a9df32690>-1stCV: 0.320343184295
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f7a9df32490>-1stCV: 0.364202174009
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f7a9df32890>-1stCV: 0.364130394207
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f7a9df32850>-1stCV: 0.367153979664
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f7a9df323d0>-1stCV: 0.373825855702
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f7a9df32510>-1stCV: 0.344737797365
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f7a9df32390>-1stCV: 0.322729669218
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f7a9df32810>-1stCV: 0.323121318725
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f7a9df32790>-1stCV: 0.322976941703
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f7a9df32050>-1stCV: 0.324514657821
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f7a9df32150>-1stCV: 0.319412825163
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f7a9df320d0>-1stCV: 0.543396439823
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f7a9df32090>-1stCV: 0.558281884322
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f7a9df32290>-1stCV: 0.50808243516
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f7a9df322d0>-1stCV: 0.55828090836
+<model_stack.model_wrapper.XgbWrapper object at 0x7f7a9df32750>-2ndCV: 0.317128776398
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f7a9df19f90>-2ndCV: 0.316787058413
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f7a9df19d10>-2ndCV: 0.316498450048
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f7a9df19dd0>-2ndCV: 0.317118927746
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f7a9df2ef10>-2ndCV: 0.31708280477
+stackingCV: 0.315877517445
+/home/ubuntu/anaconda2/lib/python2.7/site-packages/sklearn/cross_validation.py:44: DeprecationWarning: This module was deprecated in version 0.18 in favor of the model_selection module into which all the refactored classes and functions are moved. Also note that the interface of the new CV iterators are different from that of this module. This module will be removed in 0.20.
+  "This module will be removed in 0.20.", DeprecationWarning)
+/home/ubuntu/anaconda2/lib/python2.7/site-packages/sklearn/grid_search.py:43: DeprecationWarning: This module was deprecated in version 0.18 in favor of the model_selection module into which all the refactored classes and functions are moved. This module will be removed in 0.20.
+  DeprecationWarning)
+conbined_data: (36650, 702)
+submit test size: 0.264316268801
+<model_stack.model_wrapper.XgbWrapper object at 0x7f7619af4450>-1stCV: 0.318474080638
+<model_stack.model_wrapper.XgbWrapper object at 0x7f7619af4690>-1stCV: 0.318377668004
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f7619af4490>-1stCV: 0.375805970383
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f7619af4890>-1stCV: 0.370143387299
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f7619af4850>-1stCV: 0.371062935583
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f7619af43d0>-1stCV: 0.375686611422
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f7619af4510>-1stCV: 0.337882944431
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f7619af4390>-1stCV: 0.321819198658
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f7619af4810>-1stCV: 0.320274366499
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f7619af4790>-1stCV: 0.320522440507
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f7619af4050>-1stCV: 0.316489935713
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f7619af4150>-1stCV: 0.318993904247
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f7619af40d0>-1stCV: 0.330426746763
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f7619af4090>-1stCV: 0.33073596639
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f7619af4290>-1stCV: 0.508298803213
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f7619af42d0>-1stCV: 0.332393223079
+<model_stack.model_wrapper.XgbWrapper object at 0x7f7619af4750>-2ndCV: 0.315236685596
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f7619adbf90>-2ndCV: 0.313901505387
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f7619adbd10>-2ndCV: 0.315069413104
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f7619adbdd0>-2ndCV: 0.313800605026
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f7619af0f10>-2ndCV: 0.314563588579
+stackingCV: 0.0192729790097
+/home/ubuntu/anaconda2/lib/python2.7/site-packages/sklearn/cross_validation.py:44: DeprecationWarning: This module was deprecated in version 0.18 in favor of the model_selection module into which all the refactored classes and functions are moved. Also note that the interface of the new CV iterators are different from that of this module. This module will be removed in 0.20.
+  "This module will be removed in 0.20.", DeprecationWarning)
+/home/ubuntu/anaconda2/lib/python2.7/site-packages/sklearn/grid_search.py:43: DeprecationWarning: This module was deprecated in version 0.18 in favor of the model_selection module into which all the refactored classes and functions are moved. This module will be removed in 0.20.
+  DeprecationWarning)
+conbined_data: (36650, 702)
+submit test size: 0.264316268801
+<model_stack.model_wrapper.XgbWrapper object at 0x7f79b55fa490>-1stCV: 0.323251230419
+<model_stack.model_wrapper.XgbWrapper object at 0x7f79b55fa6d0>-1stCV: 0.320343184295
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f79b55fa4d0>-1stCV: 0.364202174009
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f79b55fa8d0>-1stCV: 0.364130394207
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f79b55fa890>-1stCV: 0.367153979664
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f79b55fa410>-1stCV: 0.373825855702
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f79b55fa550>-1stCV: 0.344743829082
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f79b55fa3d0>-1stCV: 0.322933673175
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f79b55fa850>-1stCV: 0.323336329133
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f79b55fa7d0>-1stCV: 0.323071781191
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f79b55fa090>-1stCV: 0.324165771123
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f79b55fa190>-1stCV: 0.319410951523
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f79b55fa110>-1stCV: 0.543396439823
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f79b55fa0d0>-1stCV: 0.55828090836
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f79b55fa2d0>-1stCV: 0.50808243516
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f79b55fa150>-1stCV: 0.55828090836
+<model_stack.model_wrapper.XgbWrapper object at 0x7f79b55fa790>-2ndCV: 0.317138064699
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f79b55ebfd0>-2ndCV: 0.316523218364
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f79b55ebf10>-2ndCV: 0.316235857735
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f79b55ebe50>-2ndCV: 0.317155437653
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f79b55ebdd0>-2ndCV: 0.317147709244
+[0]	train-rmse:8.08938e+06+35408.6	test-rmse:8.0907e+06+113797
+[10]	train-rmse:5.13184e+06+25885.4	test-rmse:5.17366e+06+113160
+[20]	train-rmse:3.46748e+06+18240.7	test-rmse:3.57038e+06+107987
+[30]	train-rmse:2.58834e+06+14950.8	test-rmse:2.76552e+06+98932.7
+[40]	train-rmse:2.15745e+06+15421.1	test-rmse:2.41433e+06+93622.5
+[50]	train-rmse:1.95819e+06+12096.8	test-rmse:2.27126e+06+85344.8
+[60]	train-rmse:1.85646e+06+9701.98	test-rmse:2.21682e+06+82113.2
+[70]	train-rmse:1.79932e+06+8343.38	test-rmse:2.201e+06+81428.4
+[80]	train-rmse:1.76457e+06+10006.1	test-rmse:2.19675e+06+85012.3
+[90]	train-rmse:1.7401e+06+12096.3	test-rmse:2.19437e+06+82022.7
+[100]	train-rmse:1.71953e+06+11505.7	test-rmse:2.19338e+06+79955.3
+[110]	train-rmse:1.70028e+06+11900	test-rmse:2.19462e+06+77833.3
+[120]	train-rmse:1.6843e+06+11023.2	test-rmse:2.19456e+06+79021.6
+[130]	train-rmse:1.66882e+06+9406.59	test-rmse:2.19588e+06+77664.2
+Ensemble-CV: 2193260.59375+80886.8543641
+stackingCV: 2193260.59375
