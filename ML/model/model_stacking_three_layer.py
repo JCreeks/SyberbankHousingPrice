@@ -83,7 +83,7 @@ train = conbined_data[:train.shape[0], :]
 test = conbined_data[train.shape[0]:, :]
 
 #############################
-#nTest = 1000
+#nTest = 500
 #train = train[:nTest]
 #y_train = y_train[:nTest]
 

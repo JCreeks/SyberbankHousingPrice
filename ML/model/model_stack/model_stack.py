@@ -165,8 +165,8 @@ class ThreeLevelModelStacking(object):
                 x_train = oof_train
                 x_test = oof_test
         
-        pd.Dataframe(x_train).to_csv("1stLayerX_trainIsLog1p_{}.csv".format(isLog1p))
-        pd.Dataframe(x_test).to_csv("1stLayerX_testIsLog1p_{}.csv".format(isLog1p))
+        pd.DataFrame(x_train).to_csv("1stLayerX_trainIsLog1p_{}.csv".format(self.isLog1p))
+        pd.DataFrame(x_test).to_csv("1stLayerX_testIsLog1p_{}.csv".format(self.isLog1p))
         
         # run level-2 out-of-folds
         self.train = x_train
