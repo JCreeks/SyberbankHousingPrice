@@ -12,6 +12,7 @@ module_path = os.path.abspath(os.path.join('..'))
 sys.path.append(module_path)
 
 import numpy as np
+import pandas as pd
 from math import sqrt
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import KFold
@@ -163,7 +164,10 @@ class ThreeLevelModelStacking(object):
             except:
                 x_train = oof_train
                 x_test = oof_test
-
+        
+        pd.Dataframe(x_train).to_csv("1stLayerX_trainIsLog1p_{}.csv".format(isLog1p))
+        pd.Dataframe(x_test).to_csv("1stLayerX_testIsLog1p_{}.csv".format(isLog1p))
+        
         # run level-2 out-of-folds
         self.train = x_train
         self.test = x_test
