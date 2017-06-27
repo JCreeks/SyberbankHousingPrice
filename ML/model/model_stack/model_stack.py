@@ -168,8 +168,8 @@ class ThreeLevelModelStacking(object):
         self.train = x_train
         self.test = x_test
         
-        x_train = np.empty((self.ntrain, self.train.shape[1]))
-        x_test = np.empty((self.ntest, self.test.shape[1]))
+        #x_train = np.empty((self.ntrain, self.train.shape[1]))
+        #x_test = np.empty((self.ntest, self.test.shape[1]))
             
         for model in self.secondLevelModels:
             oof_train, oof_test = self.run_out_of_folds(model)
@@ -177,8 +177,12 @@ class ThreeLevelModelStacking(object):
                 print("{}-2ndCV: {}".format(model, sqrt(mean_squared_error(np.log1p(self.y_train), np.log1p(oof_train.clip(0,))))))
             else:
                 print("{}-2ndCV: {}".format(model, sqrt(mean_squared_error(self.y_train, oof_train))))
-            x_train = np.concatenate((x_train, oof_train), axis=1)
-            x_test = np.concatenate((x_test, oof_test), axis=1)
+            try:
+                x_train = np.concatenate((x_train, oof_train), axis=1)
+                x_test = np.concatenate((x_test, oof_test), axis=1)
+            except:
+                x_train = oof_train
+                x_test = oof_test
             
         # run level-3 stacking
         #xgbWrapper only
