@@ -115,7 +115,7 @@ lcv_params = {'alphas' : [1, 0.1, 0.001, 0.0005]}
 
 rd_params = {'alpha': 1}
 
-ls_params = {'alpha': 1}# 0.0001}
+ls_params = {'alpha':  0.0001} #1}#
 
 eln_params = {}
 
