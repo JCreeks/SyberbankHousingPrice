@@ -67,6 +67,13 @@ conbined_data = scaler.fit_transform(conbined_data)
 train = conbined_data[:train.shape[0], :]
 test = conbined_data[train.shape[0]:, :]
 
+#############################
+#nTest = 1000
+#train = train[:nTest]
+#y_train = y_train[:nTest]
+
+#############################
+
 test_size = (1.0 * test.shape[0]) / train.shape[0]
 print "submit test size:", test_size
 
@@ -112,12 +119,13 @@ rf = SklearnWrapper(clf=RandomForestRegressor, seed=SEED, params=rf_params)
 rd = SklearnWrapper(clf=Ridge, seed=SEED, params=rd_params)
 ls = SklearnWrapper(clf=Lasso, seed=SEED, params=ls_params)
 
-level_1_models = [xg, et, rf, rd, ls]
-stacking_model = SklearnWrapper(clf=RandomForestRegressor, seed=SEED, params=rf_params)
-#XgbWrapper(seed=SEED, params=xgb_params)
+#level_1_models = [xg, et, rf, rd, ls]
+level_1_models = [xg, et]
+#stacking_model = SklearnWrapper(clf=RandomForestRegressor, seed=SEED, params=rf_params)
+stacking_model = XgbWrapper(seed=SEED, params=xgb_params)
 
-model_stack = TwoLevelModelStacking(train, y_train, test, level_1_models, stacking_model=stacking_model, stacking_with_pre_features=False)
-predicts = model_stack.run_stack_predict()
+model_stack = TwoLevelModelStacking(train, y_train, test, level_1_models, stacking_model=stacking_model, stacking_with_pre_features=False, isLog1p=False)
+predicts, score = model_stack.run_stack_predict()
 
 df_sub = pd.DataFrame({'id': submit_ids, 'price_doc': predicts})
 #df_sub.to_csv(Configure.submission_path, index=False)

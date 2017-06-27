@@ -46,11 +46,10 @@ class TwoLevelModelStacking(object):
         oof_test_skf = np.empty((self.n_folds, self.ntest))
 
         for i, (train_index, test_index) in enumerate(self.kfold.split(self.train)):
-            print 'fold-{}: train: {}, test: {}'.format(i, train_index, test_index)
+            #print 'fold-{}: train: {}, test: {}'.format(i, train_index, test_index)
             x_tr = self.train[train_index]
             y_tr = self.y_train[train_index]
             x_te = self.train[test_index]
-            print(x_te)
 
             clf.train(x_tr, y_tr)
 
@@ -64,19 +63,23 @@ class TwoLevelModelStacking(object):
         if self.stacking_with_pre_features:
             x_train = self.train
             x_test = self.test
-        else:
-            x_train = np.empty((self.ntrain, self.train.shape[1]))
-            x_test = np.empty((self.ntest, self.test.shape[1]))
+        #else:
+        #    x_train = np.empty((self.ntrain, self.train.shape[1]))
+        #    x_test = np.empty((self.ntest, self.test.shape[1]))
 
         # run level-1 out-of-folds
         for model in self.models:
             oof_train, oof_test = self.run_out_of_folds(model)
-            if (self.isLog1p):
-                print("{}-1stCV: {}".format(model, sqrt(mean_squared_error(np.log1p(self.y_train), np.log1p(oof_train)))))
+            if (not self.isLog1p):
+                print("{}-1stCV: {}".format(model, sqrt(mean_squared_error(np.log1p(self.y_train), np.log1p(oof_train.clip(0,))))))
             else:
                 print("{}-1stCV: {}".format(model, sqrt(mean_squared_error(self.y_train, oof_train))))
-            x_train = np.concatenate((x_train, oof_train), axis=1)
-            x_test = np.concatenate((x_test, oof_test), axis=1)
+            try:
+                x_train = np.concatenate((x_train, oof_train), axis=1)
+                x_test = np.concatenate((x_test, oof_test), axis=1)
+            except:
+                x_train = oof_train
+                x_test = oof_test
 
         # run level-2 stacking
         best_nrounds, cv_mean, cv_std = self.stacking_model.cv_train(x_train, self.y_train)
@@ -88,9 +91,11 @@ class TwoLevelModelStacking(object):
 
         # stacking predict
         predicts = self.stacking_model.predict(x_test)
+        score = self.stacking_model.getScore()
         if (self.isLog1p):
             predicts = np.expm1(predicts)
-        return predicts, cv_mean
+        print("stackingCV: {}".format(score))
+        return predicts, score
     
 class ThreeLevelModelStacking(object):
     """three layer model stacking"""
@@ -123,7 +128,7 @@ class ThreeLevelModelStacking(object):
         oof_test_skf = np.empty((self.n_folds, self.ntest))
 
         for i, (train_index, test_index) in enumerate(self.kfold.split(self.train)):
-            print 'fold-{}: train: {}, test: {}'.format(i, train_index, test_index)
+            #print 'fold-{}: train: {}, test: {}'.format(i, train_index, test_index)
             x_tr = self.train[train_index]
             y_tr = self.y_train[train_index]
             x_te = self.train[test_index]
@@ -140,19 +145,24 @@ class ThreeLevelModelStacking(object):
         if self.stacking_with_pre_features:
             x_train = self.train
             x_test = self.test
-        else:
-            x_train = np.empty((self.ntrain, self.train.shape[1]))
-            x_test = np.empty((self.ntest, self.test.shape[1]))
+        #else:
+        #    x_train = np.empty((self.ntrain, self.train.shape[1]))
+        #    x_test = np.empty((self.ntest, self.test.shape[1]))
 
         # run level-1 out-of-folds
         for model in self.models:
             oof_train, oof_test = self.run_out_of_folds(model)
-            if (self.isLog1p):
-                print("{}-1stCV: {}".format(model, sqrt(mean_squared_error(np.log1p(self.y_train), np.log1p(oof_train)))))
+            #print(oof_train)
+            if (not self.isLog1p):
+                print("{}-1stCV: {}".format(model, sqrt(mean_squared_error(np.log1p(self.y_train), np.log1p(oof_train.clip(0,))))))
             else:
                 print("{}-1stCV: {}".format(model, sqrt(mean_squared_error(self.y_train, oof_train))))
-            x_train = np.concatenate((x_train, oof_train), axis=1)
-            x_test = np.concatenate((x_test, oof_test), axis=1)
+            try:
+                x_train = np.concatenate((x_train, oof_train), axis=1)
+                x_test = np.concatenate((x_test, oof_test), axis=1)
+            except:
+                x_train = oof_train
+                x_test = oof_test
 
         # run level-2 out-of-folds
         self.train = x_train
@@ -163,8 +173,8 @@ class ThreeLevelModelStacking(object):
             
         for model in self.secondLevelModels:
             oof_train, oof_test = self.run_out_of_folds(model)
-            if (self.isLog1p):
-                print("{}-2ndCV: {}".format(model, sqrt(mean_squared_error(np.log1p(self.y_train), np.log1p(oof_train)))))
+            if (not self.isLog1p):
+                print("{}-2ndCV: {}".format(model, sqrt(mean_squared_error(np.log1p(self.y_train), np.log1p(oof_train.clip(0,))))))
             else:
                 print("{}-2ndCV: {}".format(model, sqrt(mean_squared_error(self.y_train, oof_train))))
             x_train = np.concatenate((x_train, oof_train), axis=1)

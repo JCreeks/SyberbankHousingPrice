@@ -79,6 +79,13 @@ conbined_data = scaler.fit_transform(conbined_data)
 train = conbined_data[:train.shape[0], :]
 test = conbined_data[train.shape[0]:, :]
 
+#############################
+#nTest = 1000
+#train = train[:nTest]
+#y_train = y_train[:nTest]
+
+#############################
+
 test_size = (1.0 * test.shape[0]) / train.shape[0]
 print "submit test size:", test_size
 
@@ -96,15 +103,16 @@ gb_params1 = {'learning_rate':0.02, 'n_estimators':500, 'min_samples_leaf':70, '
 gb_params2 = {'n_estimators':500, 'max_features':15, 'max_depth':6, 'learning_rate':0.05, 'subsample':0.8}
 
 xgb_params1 = {'learning_rate':.05, 'subsample':.95, 'max_depth':4, 'min_child_weight':4, 'n_estimators':620, 
-              'colsample_bytree':0.95, 'gamma':.4}
+              'colsample_bytree':0.95, 'gamma':.4, 'silent': 1, 'objective': 'reg:linear', 'eval_metric': 'rmse'}
 
-xgb_params2 = {'learning_rate':.05, 'subsample':.7, 'max_depth':5, 'n_estimators':309, 'colsample_bytree':0.7}
+xgb_params2 = {'learning_rate':.05, 'subsample':.7, 'max_depth':5, 'n_estimators':309, 'colsample_bytree':0.7, 
+               'silent': 1, 'objective': 'reg:linear', 'eval_metric': 'rmse'}
 
 lcv_params = {'alphas' : [1, 0.1, 0.001, 0.0005]}
 
-rd_params = {'alpha': 10}
+rd_params = {'alpha': 1}
 
-ls_params = {'alpha': 0.005}
+ls_params = {'alpha': 0.0001}
 
 eln_params = {}
 
@@ -125,17 +133,16 @@ level_1_models = level_1_models + [SklearnWrapper(clf=KNeighborsRegressor,  para
                  SklearnWrapper(clf=KNeighborsRegressor,  params=knr_params3),
                  SklearnWrapper(clf=KNeighborsRegressor,  params=knr_params4)]
 
-params_list = [rf_params1, rf_params2, et_params1, et_params2, gb_params1, gb_params2, 
-               lcv_params, rd_params, ls_params, eln_params]
+params_list = [rf_params1, rf_params2, et_params1, et_params2, gb_params1, gb_params2, rd_params, ls_params, eln_params, lcv_params
+               ]
+   
 
-func_list = [RandomForestRegressor, RandomForestRegressor, ExtraTreesRegressor, ExtraTreesRegressor, 
-             GradientBoostingRegressor, GradientBoostingRegressor, LassoCV, Ridge, Lasso, ElasticNet]
+func_list = [RandomForestRegressor, RandomForestRegressor, ExtraTreesRegressor, ExtraTreesRegressor, GradientBoostingRegressor, GradientBoostingRegressor, Ridge, Lasso, ElasticNet, LassoCV
+            ]
 level_1_models = level_1_models + \
     list(map(lambda x: SklearnWrapper(clf=x[1], seed=SEED, params=x[0]), zip(params_list, func_list)))
 
-level_2_models = [SklearnWrapper(clf=ExtraTreesRegressor,seed=SEED,params={}),
-                 XgbWrapper(seed=SEED, params=xgb_params1)]
-
+#level_1_models = level_1_models [12:]
 et_params = {
     'n_jobs': 16,
     'n_estimators': 100,
@@ -176,6 +183,8 @@ rf = SklearnWrapper(clf=RandomForestRegressor, seed=SEED, params=rf_params)
 rd = SklearnWrapper(clf=Ridge, seed=SEED, params=rd_params)
 ls = SklearnWrapper(clf=Lasso, seed=SEED, params=ls_params)
 
+#level_2_models = [SklearnWrapper(clf=ExtraTreesRegressor,seed=SEED,params={}),
+#                 XgbWrapper(seed=SEED, params=xgb_params1)]
 level_2_models = [xg, et, rf, rd, ls]
     
 # xgb_params = {
