@@ -186,9 +186,9 @@ class ThreeLevelModelStacking(object):
             
         # run level-3 stacking
         #xgbWrapper only
-        #best_nrounds, cv_mean, cv_std = self.stacking_model.cv_train(x_train, self.y_train)
-        #self.stacking_model.nrounds = best_nrounds
-        #print('Ensemble-CV: {0}+{1}'.format(cv_mean, cv_std))
+        best_nrounds, cv_mean, cv_std = self.stacking_model.cv_train(x_train, self.y_train)
+        self.stacking_model.nrounds = best_nrounds
+        print('Ensemble-CV: {0}+{1}'.format(cv_mean, cv_std))
         #xgbWrapper only
         
         self.stacking_model.train(x_train, self.y_train)
