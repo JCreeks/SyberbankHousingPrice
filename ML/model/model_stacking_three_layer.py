@@ -45,9 +45,12 @@ RMSE = make_scorer(RMSE_, greater_is_better=False)
 train, test, macro = data_utils.load_data()
 train.fillna(0, inplace=True)
 test.fillna(0)
-mult = .969
 
-train['price_doc'] = train["price_doc"] * mult + 10
+isLog1p = True
+if (not isLog1p):
+    mult = .969
+    train['price_doc'] = train["price_doc"] * mult + 10
+    
 # train['price_doc'] = np.log1p(train['price_doc'])
 y_train = train['price_doc']
 id_train = train['id']
@@ -197,7 +200,6 @@ level_2_models = [xg, et, rf, rd, ls]
 #     'silent': 1
 # }
 
-isLog1p = True
 if (isLog1p):
     scoring = RMSE
 else:
