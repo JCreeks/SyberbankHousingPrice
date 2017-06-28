@@ -138,7 +138,7 @@ knr_params4 = {'n_neighbors' : 25}
 SEED = 0
 
 level_1_models = [XgbWrapper(seed=SEED, params=xgb_params1), XgbWrapper(seed=SEED, params=xgb_params2),
-                 XgbWrapper(seed=SEED, params=xgb_params3)
+                 #XgbWrapper(seed=SEED, params=xgb_params3)
                  ]
                 
 level_1_models = level_1_models + [SklearnWrapper(clf=KNeighborsRegressor,  params=knr_params1),
@@ -198,7 +198,9 @@ ls = SklearnWrapper(clf=Lasso, seed=SEED, params=ls_params)
 
 #level_2_models = [SklearnWrapper(clf=ExtraTreesRegressor,seed=SEED,params={}),
 #                 XgbWrapper(seed=SEED, params=xgb_params1)]
-level_2_models = [xg, et, rf, rd, ls]
+level_2_models = [xg, et, rf, rd, ls,
+                 XgbWrapper(seed=SEED, params=xgb_params3)
+                 ]
     
 # xgb_params = {
 #     'eta': 0.05,
