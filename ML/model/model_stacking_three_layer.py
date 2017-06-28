@@ -46,7 +46,7 @@ train, test, macro = data_utils.load_data()
 train.fillna(0, inplace=True)
 test.fillna(0)
 
-isLog1p = True
+isLog1p = False #True
 if (not isLog1p):
     mult = .969
     train['price_doc'] = train["price_doc"] * mult + 10
@@ -111,11 +111,11 @@ xgb_params1 = {'learning_rate':.05, 'subsample':.95, 'max_depth':4, 'min_child_w
 xgb_params2 = {'learning_rate':.05, 'subsample':.7, 'max_depth':5, 'n_estimators':309, 'colsample_bytree':0.7, 
                'silent': 1, 'objective': 'reg:linear', 'eval_metric': 'rmse'}
 
-lcv_params = {'alphas' : [1, 0.1, 0.001, 0.0005]}
+lcv_params = {'alphas' : [.1,1,10,100]}# [1, 0.1, 0.001, 0.0005]}
 
 rd_params = {'alpha': 1}
 
-ls_params = {'alpha':  0.0001} #1}#
+ls_params = {'alpha':  1}#.0001}
 
 eln_params = {}
 
@@ -212,7 +212,7 @@ stacking_model = XgbWrapper(seed=SEED, params=xgb_params)
 #model_stack = TwoLevelModelStacking(train, y_train, test, level_1_models, #stacking_model=stacking_model, stacking_with_pre_features=False, n_folds=5, #random_seed=0, isLog1p=False)
 
 model_stack = ThreeLevelModelStacking(train, y_train, test, level_1_models, level_2_models, 
-stacking_model=stacking_model, stacking_with_pre_features=False, n_folds=5, random_seed=0, isLog1p=isLog1p)
+stacking_model=stacking_model, stacking_with_pre_features=True, n_folds=5, random_seed=0, isLog1p=isLog1p)
 
 predicts, score= model_stack.run_stack_predict()
 
