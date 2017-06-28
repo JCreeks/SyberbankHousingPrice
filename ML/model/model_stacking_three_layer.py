@@ -48,10 +48,10 @@ test.fillna(0)
 
 isLog1p = False #True
 if (not isLog1p):
-    #mult = .969
-    #train['price_doc'] = train["price_doc"] * mult + 10
-    mult = 1.054880504
-    train['price_doc'] = train['price_doc'] * mult
+    mult = .969
+    train['price_doc'] = train["price_doc"] * mult + 10
+    #mult = 1.054880504
+    #train['price_doc'] = train['price_doc'] * mult
     
 # train['price_doc'] = np.log1p(train['price_doc'])
 y_train = train['price_doc']
@@ -113,6 +113,9 @@ xgb_params1 = {'learning_rate':.05, 'subsample':.95, 'max_depth':4, 'min_child_w
 xgb_params2 = {'learning_rate':.05, 'subsample':.7, 'max_depth':5, 'n_estimators':309, 'colsample_bytree':0.7, 
                'silent': 1, 'objective': 'reg:linear', 'eval_metric': 'rmse'}
 
+xgb_params3 = {'learning_rate':.1, 'subsample':.85, 'max_depth':4, 'min_child_weight':2, 'n_estimators':450, 
+              'colsample_bytree':0.85, 'gamma':.4, 'silent': 1, 'objective': 'reg:linear', 'eval_metric': 'rmse'}
+
 #xgb_params3 = {'learning_rate':.05, 'subsample':.6, 'max_depth':6, 'n_estimators':422, 'colsample_bytree':1, 
 #               'silent': 1, 'objective': 'reg:linear', 'eval_metric': 'rmse'}
 
@@ -135,7 +138,7 @@ knr_params4 = {'n_neighbors' : 25}
 SEED = 0
 
 level_1_models = [XgbWrapper(seed=SEED, params=xgb_params1), XgbWrapper(seed=SEED, params=xgb_params2),
-                 #XgbWrapper(seed=SEED, params=xgb_params3)
+                 XgbWrapper(seed=SEED, params=xgb_params3)
                  ]
                 
 level_1_models = level_1_models + [SklearnWrapper(clf=KNeighborsRegressor,  params=knr_params1),
