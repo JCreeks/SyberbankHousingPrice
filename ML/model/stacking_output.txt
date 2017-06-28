@@ -101,3 +101,50 @@ stackingCV: 2193260.59375
   "This module will be removed in 0.20.", DeprecationWarning)
 /home/ubuntu/anaconda2/lib/python2.7/site-packages/sklearn/grid_search.py:43: DeprecationWarning: This module was deprecated in version 0.18 in favor of the model_selection module into which all the refactored classes and functions are moved. This module will be removed in 0.20.
   DeprecationWarning)
+conbined_data: (36650, 702)
+submit test size: 0.264316268801
+<model_stack.model_wrapper.XgbWrapper object at 0x7f4c480b5490>-1stCV: 0.318789634302
+<model_stack.model_wrapper.XgbWrapper object at 0x7f4c480b56d0>-1stCV: 0.31800281209
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f4c480b54d0>-1stCV: 0.375806978007
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f4c480b58d0>-1stCV: 0.370144351784
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f4c480b5890>-1stCV: 0.371063886573
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f4c480b5410>-1stCV: 0.375687555006
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f4c480b5550>-1stCV: 0.337947963744
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f4c480b53d0>-1stCV: 0.32152010037
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f4c480b5850>-1stCV: 0.320108002069
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f4c480b57d0>-1stCV: 0.320113754096
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f4c480b5090>-1stCV: 0.316452665749
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f4c480b5190>-1stCV: 0.318598712837
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f4c480b5110>-1stCV: 0.330427680373
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f4c480b50d0>-1stCV: 0.330736896731
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f4c480b52d0>-1stCV: 0.508299845805
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f4c480b5150>-1stCV: 0.332394150899
+<model_stack.model_wrapper.XgbWrapper object at 0x7f4c480b5790>-2ndCV: 0.31558340829
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f4c480a6fd0>-2ndCV: 0.31360544112
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f4c480a6f10>-2ndCV: 0.314591441268
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f4c480a6e50>-2ndCV: 0.313716472215
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f4c480a6dd0>-2ndCV: 0.314412709356
+[0]	train-rmse:14.4327+0.00111544	test-rmse:14.4327+0.00368706
+[10]	train-rmse:8.64691+0.000619999	test-rmse:8.64694+0.00464904
+[20]	train-rmse:5.18448+0.000328243	test-rmse:5.18473+0.00496355
+[30]	train-rmse:3.11475+0.000177522	test-rmse:3.11508+0.00507191
+[40]	train-rmse:1.88185+0.000262902	test-rmse:1.88274+0.00449879
+[50]	train-rmse:1.15388+0.000484718	test-rmse:1.15582+0.00374352
+[60]	train-rmse:0.73327+0.000884972	test-rmse:0.736933+0.00286927
+[70]	train-rmse:0.502407+0.00162972	test-rmse:0.508737+0.00301296
+[80]	train-rmse:0.386445+0.00215418	test-rmse:0.395703+0.0045755
+[90]	train-rmse:0.3344+0.00250113	test-rmse:0.346169+0.00640568
+[100]	train-rmse:0.312918+0.00264302	test-rmse:0.326588+0.00764821
+[110]	train-rmse:0.304311+0.00264705	test-rmse:0.319355+0.00839354
+[120]	train-rmse:0.30044+0.00273709	test-rmse:0.316715+0.00882774
+[130]	train-rmse:0.298206+0.00279315	test-rmse:0.315783+0.00896211
+[140]	train-rmse:0.296572+0.00247704	test-rmse:0.315408+0.00912652
+[150]	train-rmse:0.295136+0.00235247	test-rmse:0.315288+0.00916562
+[160]	train-rmse:0.29379+0.00235734	test-rmse:0.315232+0.00922476
+[170]	train-rmse:0.292528+0.00229938	test-rmse:0.315227+0.00917878
+[180]	train-rmse:0.291266+0.00215739	test-rmse:0.315252+0.00921937
+[190]	train-rmse:0.28991+0.00228736	test-rmse:0.315346+0.00917965
+[200]	train-rmse:0.288388+0.00206068	test-rmse:0.315373+0.00915572
+[210]	train-rmse:0.286998+0.0019951	test-rmse:0.315376+0.00913507
+Ensemble-CV: 0.31518075+0.00920577561575
+stackingCV: 0.31518075
