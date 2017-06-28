@@ -34,6 +34,8 @@ from model_stack.model_stack import TwoLevelModelStacking, ThreeLevelModelStacki
 from features import data_utils
 from conf.configure import Configure
 
+from magicNums import magicNums
+
 def RMSLE_(y_val, y_val_pred):
     return np.sqrt(np.mean((np.log(y_val+1)-np.log(y_val_pred+1))**2))
 RMSLE = make_scorer(RMSLE_, greater_is_better=False) 
@@ -48,10 +50,11 @@ test.fillna(0)
 
 isLog1p = False #True
 if (not isLog1p):
-    mult = .969
-    train['price_doc'] = train["price_doc"] * mult + 10
-    #mult = 1.054880504
-    #train['price_doc'] = train['price_doc'] * mult
+    #mult = .969
+    #train['price_doc'] = train["price_doc"] * mult + 10
+    
+#####Magic Numbers!!!!!!!!!!!########
+train = magicNums(train)
     
 # train['price_doc'] = np.log1p(train['price_doc'])
 y_train = train['price_doc']
