@@ -230,3 +230,17 @@ predicts, score= model_stack.run_stack_predict()
 
 df_sub = pd.DataFrame({'id': submit_ids, 'price_doc': predicts})
 df_sub.to_csv(Configure.submission_path+str(score)+'.csv', index=False)
+
+
+#tmp_predicts, tmp_score= model_stack.run_stack_predict()
+#try:
+#    predicts = np.add(predicts, tmp_predicts)
+#    score = score + tmp_score
+#except:
+#    predicts = tmp_predicts
+#    score = tmp_score
+#predicts = predicts/len(seedList)
+#score = score/len(seedList)
+    
+    
+    
