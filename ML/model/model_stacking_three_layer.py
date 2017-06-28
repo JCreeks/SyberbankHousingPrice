@@ -116,8 +116,8 @@ xgb_params2 = {'learning_rate':.05, 'subsample':.7, 'max_depth':5, 'n_estimators
 xgb_params3 = {'learning_rate':.1, 'subsample':.85, 'max_depth':4, 'min_child_weight':2, 'n_estimators':450, 
               'colsample_bytree':0.85, 'gamma':.4, 'silent': 1, 'objective': 'reg:linear', 'eval_metric': 'rmse'}
 
-#xgb_params3 = {'learning_rate':.05, 'subsample':.6, 'max_depth':6, 'n_estimators':422, 'colsample_bytree':1, 
-#               'silent': 1, 'objective': 'reg:linear', 'eval_metric': 'rmse'}
+xgb_params4 = {'learning_rate':.05, 'subsample':.6, 'max_depth':6, 'n_estimators':422, 'colsample_bytree':1, 
+               'silent': 1, 'objective': 'reg:linear', 'eval_metric': 'rmse'}
 
 lcv_params = {'alphas' : [.1, 1, 10, 100, 1000]}# [1, 0.1, 0.001, 0.0005]}
 
@@ -138,7 +138,8 @@ knr_params4 = {'n_neighbors' : 25}
 SEED = 0
 
 level_1_models = [XgbWrapper(seed=SEED, params=xgb_params1), XgbWrapper(seed=SEED, params=xgb_params2),
-                 #XgbWrapper(seed=SEED, params=xgb_params3)
+                 XgbWrapper(seed=SEED, params=xgb_params3),
+                 XgbWrapper(seed=SEED, params=xgb_params4) 
                  ]
                 
 level_1_models = level_1_models + [SklearnWrapper(clf=KNeighborsRegressor,  params=knr_params1),
@@ -224,7 +225,7 @@ stacking_model = XgbWrapper(seed=SEED, params=xgb_params)
 #model_stack = TwoLevelModelStacking(train, y_train, test, level_1_models, #stacking_model=stacking_model, stacking_with_pre_features=False, n_folds=5, #random_seed=0, isLog1p=False)
 
 model_stack = ThreeLevelModelStacking(train, y_train, test, level_1_models, level_2_models, 
-stacking_model=stacking_model, stacking_with_pre_features=True, n_folds=5, random_seed=0, isLog1p=isLog1p)
+stacking_model=stacking_model, stacking_with_pre_features=False, n_folds=5, random_seed=0, isLog1p=isLog1p)
 
 predicts, score= model_stack.run_stack_predict()
 
