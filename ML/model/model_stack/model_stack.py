@@ -165,8 +165,8 @@ class ThreeLevelModelStacking(object):
                 x_train = oof_train
                 x_test = oof_test
         
-        pd.DataFrame(x_train).to_csv("1stLayerX_trainIsLog1p_{}.csv".format(self.isLog1p))
-        pd.DataFrame(x_test).to_csv("1stLayerX_testIsLog1p_{}.csv".format(self.isLog1p))
+        train_to_save = x_train
+        test_to_save = x_test
         
         # run level-2 out-of-folds
         self.train = x_train
@@ -201,6 +201,10 @@ class ThreeLevelModelStacking(object):
         # stacking predict
         predicts = self.stacking_model.predict(x_test)
         score = self.stacking_model.getScore()
+        
+        pd.DataFrame(train_to_save).to_csv("1stLayerX_trainIsLog1p_{}_{}.csv".format(self.isLog1p, score))
+        pd.DataFrame(test_to_save).to_csv("1stLayerX_testIsLog1p_{}_{}.csv".format(self.isLog1p, score))
+        
         if (self.isLog1p):
             predicts = np.expm1(predicts)
         print("stackingCV: {}".format(score))
