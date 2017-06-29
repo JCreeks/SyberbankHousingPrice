@@ -49,7 +49,7 @@ train.fillna(0, inplace=True)
 test.fillna(0)
 
 isLog1p = False #True
-if (not isLog1p):
+#if (not isLog1p):
     #mult = .969
     #train['price_doc'] = train["price_doc"] * mult + 10
     
