@@ -229,7 +229,7 @@ stacking_model = XgbWrapper(seed=SEED, params=xgb_params)
 #model_stack = TwoLevelModelStacking(train, y_train, test, level_2_models, stacking_model=stacking_model, stacking_with_pre_features=False, n_folds=5, random_seed=0, isLog1p=False)
 
 model_stack = ThreeLevelModelStacking(train, y_train, test, level_1_models, level_2_models, 
-stacking_model=stacking_model, stacking_with_pre_features=False, n_folds=5, random_seed=0, isLog1p=isLog1p)
+stacking_model=stacking_model, stacking_with_pre_features=True, n_folds=5, random_seed=0, isLog1p=isLog1p)
 
 predicts, score= model_stack.run_stack_predict()
 
