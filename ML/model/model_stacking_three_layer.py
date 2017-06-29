@@ -83,13 +83,19 @@ del conbined_data['sport_objects_raion_ratio_dis']
 del conbined_data['additional_education_raion_ratio_dis']
 del conbined_data['0_6_all_vs_preschool_quota_dis']
 
+conbined_data.replace([np.infty, -np.infty], np.nan)
+imp = Imputer(missing_values=np.nan, strategy='median')
+conbined_data=pd.DataFrame(imp.fit_transform(conbined_data), columns=conbined_data.columns)
+imp = Imputer(missing_values=np.infty, strategy='median')
+conbined_data=pd.DataFrame(imp.fit_transform(conbined_data), columns=conbined_data.columns)
+
 scaler = StandardScaler()
 conbined_data = scaler.fit_transform(conbined_data)
 
 train = conbined_data[:train.shape[0], :]
 test = conbined_data[train.shape[0]:, :]
 
-train, test = data_preprocess(train, test)
+#train, test = data_preprocess(train, test)
 #############################
 #nTest = 500
 #train = train[:nTest]
