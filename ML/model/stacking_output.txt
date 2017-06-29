@@ -372,3 +372,61 @@ stackingCV: 2123193.71875
   "This module will be removed in 0.20.", DeprecationWarning)
 /home/ubuntu/anaconda2/lib/python2.7/site-packages/sklearn/grid_search.py:43: DeprecationWarning: This module was deprecated in version 0.18 in favor of the model_selection module into which all the refactored classes and functions are moved. This module will be removed in 0.20.
   DeprecationWarning)
+conbined_data: (36650, 702)
+submit test size: 0.264316268801
+<model_stack.model_wrapper.XgbWrapper object at 0x7f0959f9c490>-1stCV: 0.323251230419
+<model_stack.model_wrapper.XgbWrapper object at 0x7f0959f9c6d0>-1stCV: 0.320343184295
+<model_stack.model_wrapper.XgbWrapper object at 0x7f0959f9c4d0>-1stCV: 0.320209966707
+<model_stack.model_wrapper.XgbWrapper object at 0x7f0959f9c750>-1stCV: 0.318815794226
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f0959f9c8d0>-1stCV: 0.364202174009
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f0959f9c890>-1stCV: 0.364130394207
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f0959f9c410>-1stCV: 0.367153979664
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f0959f9c790>-1stCV: 0.373825855702
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f0959f9c810>-1stCV: 0.34470227935
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f0959f9c610>-1stCV: 0.322901830654
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f0959f9c5d0>-1stCV: 0.323074190284
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f0959f9c1d0>-1stCV: 0.323235152704
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f0959f9c190>-1stCV: 0.324132830799
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f0959f9c110>-1stCV: 0.31920287794
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f0959f9c0d0>-1stCV: 0.543396439823
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f0959f9c2d0>-1stCV: 0.55828090836
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f0959f9c150>-1stCV: 0.50808243516
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f0959f8efd0>-1stCV: 0.571204505973
+<model_stack.model_wrapper.XgbWrapper object at 0x7f0959f9c690>-2ndCV: 0.317005162795
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f0959f8ef50>-2ndCV: 0.31607916523
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f0959f8ee90>-2ndCV: 0.315660082734
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f0959f8edd0>-2ndCV: 0.316725475842
+<model_stack.model_wrapper.SklearnWrapper object at 0x7f0959f8ed50>-2ndCV: 0.316723650136
+<model_stack.model_wrapper.XgbWrapper object at 0x7f0959f8ecd0>-2ndCV: 0.317934242852
+[0]	train-rmse:8.08967e+06+35315.4	test-rmse:8.09432e+06+111341
+[10]	train-rmse:5.12804e+06+24285.2	test-rmse:5.17428e+06+107542
+[20]	train-rmse:3.4654e+06+18425.3	test-rmse:3.5631e+06+104325
+[30]	train-rmse:2.58611e+06+11090.1	test-rmse:2.76547e+06+98717.7
+[40]	train-rmse:2.15291e+06+10330.9	test-rmse:2.40552e+06+89443.5
+[50]	train-rmse:1.9476e+06+9459.11	test-rmse:2.26125e+06+80960.8
+[60]	train-rmse:1.84773e+06+9127.45	test-rmse:2.20569e+06+80287.2
+[70]	train-rmse:1.78996e+06+9154.44	test-rmse:2.18905e+06+82392.7
+[80]	train-rmse:1.75358e+06+9630.36	test-rmse:2.17967e+06+83326.8
+[90]	train-rmse:1.72735e+06+10534.7	test-rmse:2.17379e+06+83372
+[100]	train-rmse:1.70508e+06+9890.05	test-rmse:2.17152e+06+82866
+[110]	train-rmse:1.68733e+06+9792.38	test-rmse:2.17104e+06+83439.1
+[120]	train-rmse:1.67116e+06+9591.97	test-rmse:2.16963e+06+81582.5
+[130]	train-rmse:1.65699e+06+9031.91	test-rmse:2.17179e+06+81018.7
+[140]	train-rmse:1.64287e+06+9337.64	test-rmse:2.17185e+06+80312.6
+[150]	train-rmse:1.62695e+06+8176.09	test-rmse:2.17135e+06+79833.5
+[160]	train-rmse:1.61355e+06+6234.07	test-rmse:2.16921e+06+79575.1
+[170]	train-rmse:1.59986e+06+6749.01	test-rmse:2.16838e+06+79010.5
+[180]	train-rmse:1.58849e+06+6555.23	test-rmse:2.16865e+06+79653.6
+[190]	train-rmse:1.57656e+06+6962.97	test-rmse:2.16766e+06+78907.6
+[200]	train-rmse:1.56473e+06+7860.35	test-rmse:2.16728e+06+78138.1
+[210]	train-rmse:1.55405e+06+7674.44	test-rmse:2.16734e+06+78962.8
+[220]	train-rmse:1.54259e+06+7120.5	test-rmse:2.16816e+06+79308.5
+[230]	train-rmse:1.53194e+06+7468.49	test-rmse:2.16802e+06+78252.1
+[240]	train-rmse:1.52194e+06+6721.72	test-rmse:2.16757e+06+77932.3
+[250]	train-rmse:1.51069e+06+6683.31	test-rmse:2.16682e+06+77795.4
+[260]	train-rmse:1.50029e+06+7617.81	test-rmse:2.16684e+06+77669.7
+[270]	train-rmse:1.49057e+06+7728.57	test-rmse:2.1673e+06+77548.3
+[280]	train-rmse:1.48115e+06+7253.71	test-rmse:2.16815e+06+77414.5
+[290]	train-rmse:1.4722e+06+7410.08	test-rmse:2.16914e+06+76727
+Ensemble-CV: 2166583.375+77620.9742526
+stackingCV: 2166583.375
