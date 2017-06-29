@@ -33,6 +33,7 @@ from model_stack.model_stack import TwoLevelModelStacking, ThreeLevelModelStacki
 # my own module
 from features import data_utils
 from conf.configure import Configure
+from readData import data_preprocess
 
 from magicNums import magicNums
 
@@ -45,8 +46,8 @@ def RMSE_(y_val, y_val_pred):
 RMSE = make_scorer(RMSE_, greater_is_better=False)
 
 train, test, macro = data_utils.load_data()
-train.fillna(0, inplace=True)
-test.fillna(0)
+#train.fillna(0, inplace=True)
+#test.fillna(0)
 
 isLog1p = False #True
 if (not isLog1p):
@@ -88,6 +89,7 @@ conbined_data = scaler.fit_transform(conbined_data)
 train = conbined_data[:train.shape[0], :]
 test = conbined_data[train.shape[0]:, :]
 
+train, test = data_preprocess(train, test)
 #############################
 #nTest = 500
 #train = train[:nTest]
@@ -125,7 +127,7 @@ xgb_params4 = {'learning_rate':.05, 'subsample':.6, 'max_depth':6, 'n_estimators
 
 lcv_params = {'alphas' : [.1, 1, 10, 100, 1000]}# [1, 0.1, 0.001, 0.0005]}
 
-rd_params = {'alpha': 10}
+rd_params = {'alpha': .1}
 
 ls_params = {'alpha':  100}#.0001}
 
@@ -142,8 +144,8 @@ knr_params4 = {'n_neighbors' : 25}
 SEED = 0
 
 level_1_models = [XgbWrapper(seed=SEED, params=xgb_params1), XgbWrapper(seed=SEED, params=xgb_params2),
-                 XgbWrapper(seed=SEED, params=xgb_params3),
-                 XgbWrapper(seed=SEED, params=xgb_params4) 
+                 #XgbWrapper(seed=SEED, params=xgb_params3),
+                 #XgbWrapper(seed=SEED, params=xgb_params4) 
                  ]
                 
 level_1_models = level_1_models + [SklearnWrapper(clf=KNeighborsRegressor,  params=knr_params1),
@@ -188,7 +190,7 @@ xgb_params = {
 }
 
 rd_params = {
-    'alpha': 10
+    'alpha': .1
 }
 
 ls_params = {
@@ -229,7 +231,7 @@ stacking_model = XgbWrapper(seed=SEED, params=xgb_params)
 #model_stack = TwoLevelModelStacking(train, y_train, test, level_2_models, stacking_model=stacking_model, stacking_with_pre_features=False, n_folds=5, random_seed=0, isLog1p=False)
 
 model_stack = ThreeLevelModelStacking(train, y_train, test, level_1_models, level_2_models, 
-stacking_model=stacking_model, stacking_with_pre_features=False, n_folds=5, random_seed=0, isLog1p=isLog1p)
+stacking_model=stacking_model, stacking_with_pre_features=True, n_folds=5, random_seed=0, isLog1p=isLog1p)
 
 predicts, score= model_stack.run_stack_predict()
 
