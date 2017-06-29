@@ -18,6 +18,8 @@ import warnings
 
 warnings.filterwarnings('ignore')
 
+from sklearn.preprocessing import Imputer
+
 from sklearn import preprocessing
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import ExtraTreesRegressor, GradientBoostingRegressor
