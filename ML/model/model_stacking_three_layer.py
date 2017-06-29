@@ -49,9 +49,9 @@ train.fillna(0, inplace=True)
 test.fillna(0)
 
 isLog1p = False #True
-#if (not isLog1p):
-    #mult = .969
-    #train['price_doc'] = train["price_doc"] * mult + 10
+if (not isLog1p):
+    mult = .969
+    train['price_doc'] = train["price_doc"] * mult + 10
     
 #####Magic Numbers!!!!!!!!!!!########
 #train = magicNums(train)
@@ -125,9 +125,9 @@ xgb_params4 = {'learning_rate':.05, 'subsample':.6, 'max_depth':6, 'n_estimators
 
 lcv_params = {'alphas' : [.1, 1, 10, 100, 1000]}# [1, 0.1, 0.001, 0.0005]}
 
-rd_params = {'alpha': 1}
+rd_params = {'alpha': 10}
 
-ls_params = {'alpha':  1}#.0001}
+ls_params = {'alpha':  100}#.0001}
 
 eln_params = {}
 
@@ -142,8 +142,8 @@ knr_params4 = {'n_neighbors' : 25}
 SEED = 0
 
 level_1_models = [XgbWrapper(seed=SEED, params=xgb_params1), XgbWrapper(seed=SEED, params=xgb_params2),
-                 #XgbWrapper(seed=SEED, params=xgb_params3),
-                 #XgbWrapper(seed=SEED, params=xgb_params4) 
+                 XgbWrapper(seed=SEED, params=xgb_params3),
+                 XgbWrapper(seed=SEED, params=xgb_params4) 
                  ]
                 
 level_1_models = level_1_models + [SklearnWrapper(clf=KNeighborsRegressor,  params=knr_params1),
@@ -192,7 +192,7 @@ rd_params = {
 }
 
 ls_params = {
-    'alpha': 0.005
+    'alpha': 100#0.005
 }
 
 xg = XgbWrapper(seed=SEED, params=xgb_params)
@@ -229,7 +229,7 @@ stacking_model = XgbWrapper(seed=SEED, params=xgb_params)
 #model_stack = TwoLevelModelStacking(train, y_train, test, level_2_models, stacking_model=stacking_model, stacking_with_pre_features=False, n_folds=5, random_seed=0, isLog1p=False)
 
 model_stack = ThreeLevelModelStacking(train, y_train, test, level_1_models, level_2_models, 
-stacking_model=stacking_model, stacking_with_pre_features=True, n_folds=5, random_seed=0, isLog1p=isLog1p)
+stacking_model=stacking_model, stacking_with_pre_features=False, n_folds=5, random_seed=0, isLog1p=isLog1p)
 
 predicts, score= model_stack.run_stack_predict()
 
