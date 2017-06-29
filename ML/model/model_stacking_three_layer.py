@@ -54,7 +54,7 @@ isLog1p = False #True
     #train['price_doc'] = train["price_doc"] * mult + 10
     
 #####Magic Numbers!!!!!!!!!!!########
-train = magicNums(train)
+#train = magicNums(train)
 #####################################
     
 # train['price_doc'] = np.log1p(train['price_doc'])
@@ -142,8 +142,8 @@ knr_params4 = {'n_neighbors' : 25}
 SEED = 0
 
 level_1_models = [XgbWrapper(seed=SEED, params=xgb_params1), XgbWrapper(seed=SEED, params=xgb_params2),
-                 XgbWrapper(seed=SEED, params=xgb_params3),
-                 XgbWrapper(seed=SEED, params=xgb_params4) 
+                 #XgbWrapper(seed=SEED, params=xgb_params3),
+                 #XgbWrapper(seed=SEED, params=xgb_params4) 
                  ]
                 
 level_1_models = level_1_models + [SklearnWrapper(clf=KNeighborsRegressor,  params=knr_params1),
@@ -204,7 +204,7 @@ ls = SklearnWrapper(clf=Lasso, seed=SEED, params=ls_params)
 #level_2_models = [SklearnWrapper(clf=ExtraTreesRegressor,seed=SEED,params={}),
 #                 XgbWrapper(seed=SEED, params=xgb_params1)]
 level_2_models = [xg, et, rf, rd, ls,
-                # XgbWrapper(seed=SEED, params=xgb_params3)
+                XgbWrapper(seed=SEED, params=xgb_params3)
                  ]
     
 # xgb_params = {
@@ -226,10 +226,10 @@ stacking_model = XgbWrapper(seed=SEED, params=xgb_params)
 #stacking_model = GridCVWrapper(Ridge, seed=SEED, cv_fold=5, params={}, scoring=scoring, param_grid = {
 #            'alpha': [1e-3,5e-3,1e-2,5e-2,1e-1,0.2,0.3,0.4,0.5,0.8,1e0,3,5,7,1e1]})
 
-model_stack = TwoLevelModelStacking(train, y_train, test, level_2_models, stacking_model=stacking_model, stacking_with_pre_features=False, n_folds=5, random_seed=0, isLog1p=False)
+#model_stack = TwoLevelModelStacking(train, y_train, test, level_2_models, stacking_model=stacking_model, stacking_with_pre_features=False, n_folds=5, random_seed=0, isLog1p=False)
 
-#model_stack = ThreeLevelModelStacking(train, y_train, test, level_1_models, level_2_models, 
-#stacking_model=stacking_model, stacking_with_pre_features=False, n_folds=5, random_seed=0, isLog1p=isLog1p)
+model_stack = ThreeLevelModelStacking(train, y_train, test, level_1_models, level_2_models, 
+stacking_model=stacking_model, stacking_with_pre_features=False, n_folds=5, random_seed=0, isLog1p=isLog1p)
 
 predicts, score= model_stack.run_stack_predict()
 
