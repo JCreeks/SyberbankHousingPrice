@@ -1,11 +1,3 @@
-#!/usr/local/miniconda2/bin/python
-# _*_ coding: utf-8 _*_
-
-"""
-全局配置文件
-@author: MarkLiu
-@time  : 17-5-23 上午10:33
-"""
 import time
 
 
